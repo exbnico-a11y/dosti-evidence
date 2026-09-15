@@ -252,6 +252,29 @@ function sintetizar(resultados, query, maxOraciones = 4) {
     usar(c);
   }
   elegidas.sort((a, b) => b.p - a.p);      // orden clínico: las más puntuadas primero
+  // Óptimo de palabras visibles (criterio global UX): ≤90 palabras en el bloque.
+  // Estrategia: 1) recortar cada oración a su núcleo accionable (límite de
+  // cláusula, nunca a la mitad de una frase), 2) si aún se rebasa, retirar la
+  // oración menos relevante, 3) caso extremo de una sola oración: cortarla.
+  const OPTIMO_PALABRAS = 90, MAX_PAL_ORACION = 34;
+  const nPal = s => s.split(/\s+/).length;
+  const cortarEnClausula = (s, maxPal) => {
+    if (nPal(s) <= maxPal) return s;
+    const toks = s.split(/\s+/);
+    const acum = toks.slice(0, maxPal).join(" ");
+    const hasta = acum.length + 1;
+    const mejor = Math.max(s.slice(0, hasta).lastIndexOf("; "), s.slice(0, hasta).lastIndexOf(", "));
+    return (mejor > 50 ? s.slice(0, mejor) : acum) + "…";
+  };
+  elegidas.forEach(o => { o.s = cortarEnClausula(o.s, MAX_PAL_ORACION); });
+  let totalPal = elegidas.reduce((n, o) => n + nPal(o.s), 0);
+  while (totalPal > OPTIMO_PALABRAS && elegidas.length > 1) {
+    totalPal -= nPal(elegidas[elegidas.length - 1].s);
+    elegidas.pop();
+  }
+  if (totalPal > OPTIMO_PALABRAS && elegidas.length) {
+    elegidas[0].s = cortarEnClausula(elegidas[0].s, OPTIMO_PALABRAS);
+  }
   elegidas.forEach(c => { if (!bloqueDe.has(c)) bloqueDe.set(c, asignarBloque(c.s, intencion)); });
   elegidas.bloqueDe = bloqueDe;
   elegidas.intencion = intencion;
@@ -492,6 +515,11 @@ const REMEDIOS = [
     fuentes: [
       { nombre: "Meta-análisis 2022 — PMC (17 ECA)", url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC9086798/" },
       { nombre: "Atlas de las Plantas de la Medicina Tradicional Mexicana (UNAM/INI)", url: "http://www.medicinatradicionalmexicana.unam.mx/" }
+    ],
+    enlaces: [
+      { texto: "🫀 Ver algoritmo clínico HTA", vista: "algoritmo" },
+      { texto: "🔎 Guías oficiales: tratamiento de la HAS", vista: "buscador",
+        q: "tratamiento farmacológico inicial hipertensión", tema: "hipertension" }
     ]
   },
   {
@@ -508,6 +536,11 @@ const REMEDIOS = [
     fuentes: [
       { nombre: "Meta-análisis Xiong 2015 — PubMed", url: "https://pubmed.ncbi.nlm.nih.gov/25837272/" },
       { nombre: "Meta-análisis Ried 2020 — PMC", url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC6966103/" }
+    ],
+    enlaces: [
+      { texto: "🫀 Ver algoritmo clínico HTA", vista: "algoritmo" },
+      { texto: "🔎 Guías oficiales: metas de presión arterial", vista: "buscador",
+        q: "meta de presión arterial según riesgo cardiovascular", tema: "hipertension" }
     ]
   },
   {
@@ -524,6 +557,10 @@ const REMEDIOS = [
     fuentes: [
       { nombre: "FDA — Health claims autorizados (21 CFR 101.81)", url: "https://www.fda.gov/food/nutrition-food-labeling-and-critical-foods/authorized-health-claims-meet-significant-scientific-agreement-ssa-standard" },
       { nombre: "Revisión de beta-glucano de avena — PubMed", url: "https://pubmed.ncbi.nlm.nih.gov/21631511/" }
+    ],
+    enlaces: [
+      { texto: "🔎 Guías oficiales: metas de LDL en dislipidemia", vista: "buscador",
+        q: "metas de LDL dislipidemia", tema: "dislipidemias" }
     ]
   },
   {
@@ -780,6 +817,9 @@ function initRemedios() {
         <div class="remedio-fuentes">
           ${r.fuentes.map(f => `<a href="${f.url}" target="_blank" rel="noopener">${f.nombre} ↗</a>`).join("")}
         </div>
+        ${r.enlaces ? `<div class="remedio-enlaces">` + r.enlaces.map((e, i) =>
+          `<button class="link-salto" data-r="${REMEDIOS.indexOf(r)}" data-e="${i}">${e.texto}</button>`
+        ).join("") + `</div>` : ""}
       </div>`).join("")
       : `<p class="sin-resultados" style="grid-column:1/-1">Sin remedios que coincidan
         con la búsqueda. Prueba con otro síntoma (tos, náusea, presión, dormir…)
@@ -788,6 +828,12 @@ function initRemedios() {
 
   pintar();
   inputTexto.addEventListener("input", pintar);
+  lista.addEventListener("click", ev => {
+    const b = ev.target.closest(".link-salto");
+    if (!b) return;
+    const e = REMEDIOS[+b.dataset.r].enlaces[+b.dataset.e];
+    irA(e.vista, e.q, e.tema);
+  });
   document.querySelectorAll(".filtro-remedios .chip-tema").forEach(ch =>
     ch.addEventListener("click", () => {
       catActual = ch.dataset.cat;
@@ -795,6 +841,24 @@ function initRemedios() {
         c.classList.toggle("activo", c === ch));
       pintar();
     }));
+}
+
+/* ---------- navegación entre secciones (remedio → algoritmo / guías) ---------- */
+
+let RUN_QUERY = null; // la asigna init() al crear `run`
+
+function irA(vista, q, tema) {
+  const tab = document.querySelector(`.tabs .tab[data-vista="${vista}"]`);
+  if (tab) tab.click();
+  if (vista === "buscador" && q && RUN_QUERY) {
+    if (tema) {
+      TEMA_ACTUAL = tema;
+      document.querySelectorAll(".chip-tema[data-tema]").forEach(c =>
+        c.classList.toggle("activo", c.dataset.tema === tema));
+    }
+    document.getElementById("q").value = q;
+    RUN_QUERY(q);
+  }
 }
 
 /* ---------- pestañas principales ---------- */
@@ -851,6 +915,7 @@ async function init() {
     render(buscar(q, 10, TEMA_ACTUAL), q);
     document.getElementById("resultados").scrollIntoView({ behavior: "smooth", block: "start" });
   };
+  RUN_QUERY = run;
   document.getElementById("btn").addEventListener("click", () =>
     run(document.getElementById("q").value));
   document.getElementById("q").addEventListener("keydown", e => {
