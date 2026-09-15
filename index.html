@@ -33,14 +33,22 @@
         <button id="btn">Buscar evidencia</button>
       </div>
       <div class="ejemplos">
+        <span>Padecimiento:</span>
+        <button class="chip-tema activo" data-tema="todos">Todos</button>
+        <button class="chip-tema" data-tema="hipertension">Hipertensión</button>
+        <button class="chip-tema" data-tema="diabetes">Diabetes</button>
+        <button class="chip-tema" data-tema="dislipidemias">Dislipidemias</button>
+        <button class="chip-tema" data-tema="obesidad">Obesidad</button>
+      </div>
+      <div class="ejemplos">
         <span>Ejemplos:</span>
         <button class="chip" data-q="meta de presión arterial en adulto mayor">Meta de PA en adulto mayor</button>
         <button class="chip" data-q="tratamiento farmacológico inicial hipertensión grado 2">Tratamiento inicial HTA grado 2</button>
-        <button class="chip" data-q="interacción IECA con ARA II">IECA + ARA II</button>
-        <button class="chip" data-q="emergencia hipertensiva criterios de referencia">Crisis hipertensiva: referencia</button>
-        <button class="chip" data-q="medidas no farmacológicas reducción de sodio">Medidas no farmacológicas</button>
+        <button class="chip" data-q="metformina dosis inicial diabetes">Metformina en DM2</button>
+        <button class="chip" data-q="metas de LDL dislipidemia">Meta de LDL</button>
+        <button class="chip" data-q="indicación de fármacos en obesidad">Fármacos en obesidad</button>
       </div>
-      <p id="cargando" class="cargando">Cargando índice de evidencia (1.7 MB)…</p>
+      <p id="cargando" class="cargando">Cargando índice de evidencia (3.0 MB, 12 fuentes oficiales)…</p>
     </section>
 
     <section class="layout" id="resultados" hidden>
@@ -75,7 +83,7 @@
 
   <footer>
     <p>Fuentes: CENETEC · IMSS · Secretaría de Salud (NOM-030-SSA2-2009) · gob.mx.
-    Índice generado el 2026-09-15 (v0.3 — 1,064 fragmentos, 7 documentos, búsqueda BM25 con siglas clínicas). Las guías clínicas se actualizan periódicamente.</p>
+    Índice generado el 2026-09-15 (v0.4 — 1,897 fragmentos, 12 fuentes, 4 padecimientos). Las guías clínicas se actualizan periódicamente.</p>
   </footer>
 
   <div class="modal-overlay" id="modal-cedula">

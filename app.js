@@ -47,8 +47,10 @@ function tokenize(text) {
 /* ---------- búsqueda BM25 ---------- */
 
 const K1 = 1.5, B = 0.75;
+let TEMA_ACTUAL = "todos";
+let DOCS_TEMA = null;  // docIdx -> tema (se construye al cargar)
 
-function buscar(query, k = 10) {
+function buscar(query, k = 10, tema = "todos") {
   const terms = tokenize(query);
   if (!terms.length) return [];
   const N = IDX.meta.total, avgdl = IDX.meta.avgdl;
@@ -81,6 +83,7 @@ function buscar(query, k = 10) {
   const porPagina = new Map(), sel = [];
   for (const [cid, sc] of ranked) {
     const c = IDX.chunks[cid];
+    if (tema !== "todos" && DOCS_TEMA[c[0]] !== tema) continue;
     const key = c[0] + ":" + c[1];
     const n = porPagina.get(key) || 0;
     if (n >= 2) continue;
@@ -305,9 +308,18 @@ function initFarmacos() {
 async function init() {
   const res = await fetch("index.json");
   IDX = await res.json();
-  document.getElementById("doclist").innerHTML = IDX.meta.docs
-    .map(d => `<li><strong>${d.nombre}</strong><br><span class="vig">${d.vigencia}</span></li>`)
-    .join("");
+  DOCS_TEMA = IDX.meta.docs.map(d => d.tema);
+
+  // lista de fuentes agrupadas por padecimiento
+  const temas = [...new Set(IDX.meta.docs.map(d => d.tema))];
+  const nombreTema = { hipertension: "Hipertensión arterial", diabetes: "Diabetes mellitus tipo 2",
+                       dislipidemias: "Dislipidemias", obesidad: "Sobrepeso y obesidad" };
+  document.getElementById("doclist").innerHTML = temas.map(t => {
+    const docs = IDX.meta.docs.filter(d => d.tema === t);
+    return `<li class="tema-grupo"><strong>${nombreTema[t] || t}</strong> (${docs.length} fuentes)<ul>` +
+      docs.map(d => `<li class="tema-doc">${d.nombre}<br><span class="vig">${d.vigencia}</span></li>`).join("") +
+      `</ul></li>`;
+  }).join("");
   document.getElementById("cargando").hidden = true;
 
   initCedula();
@@ -316,7 +328,7 @@ async function init() {
   const run = q => {
     q = q.trim();
     if (!q) return;
-    render(buscar(q), q);
+    render(buscar(q, 10, TEMA_ACTUAL), q);
     document.getElementById("resultados").scrollIntoView({ behavior: "smooth", block: "start" });
   };
   document.getElementById("btn").addEventListener("click", () =>
@@ -328,6 +340,16 @@ async function init() {
     ch.addEventListener("click", () => {
       document.getElementById("q").value = ch.dataset.q;
       run(ch.dataset.q);
+    }));
+
+  // filtro por padecimiento
+  document.querySelectorAll(".chip-tema").forEach(ch =>
+    ch.addEventListener("click", () => {
+      TEMA_ACTUAL = ch.dataset.tema;
+      document.querySelectorAll(".chip-tema").forEach(c =>
+        c.classList.toggle("activo", c === ch));
+      const q = document.getElementById("q").value.trim();
+      if (q) run(q);
     }));
 
   if (location.hash.startsWith("#q=")) {

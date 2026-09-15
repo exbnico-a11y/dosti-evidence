@@ -166,3 +166,16 @@ footer {
 .cargando { margin-top: 12px; font-size: 13px; color: var(--muted); font-style: italic; }
 .intro li .vig { font-size: 12px; color: var(--muted); }
 .intro li { margin-bottom: 8px; }
+
+/* --- filtro por padecimiento --- */
+.chip-tema {
+  margin: 4px 3px; padding: 6px 14px; font-size: 13px; font-weight: 600;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; cursor: pointer; color: var(--muted);
+}
+.chip-tema:hover { border-color: var(--teal); }
+.chip-tema.activo { background: var(--teal); color: #fff; border-color: var(--teal); }
+.tema-grupo { margin-bottom: 10px; }
+.tema-grupo > strong { color: var(--teal-dark); font-size: 14px; }
+.tema-grupo ul { margin: 4px 0 0 16px; }
+.tema-doc { font-size: 12.5px; margin-bottom: 6px; }
