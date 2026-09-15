@@ -206,6 +206,7 @@ footer {
 .badge-ev.moderada { background: #e7f0fb; color: #1d4f91; border: 1px solid #bcd4f0; }
 .badge-ev.limitada { background: #f4f1e6; color: #7a6415; border: 1px solid #e4d9b0; }
 .badge-ev.mixta { background: #fbeaea; color: #9b2c2c; border: 1px solid #f0c4c4; }
+.badge-ev.tradicional { background: #efe9f6; color: #5b4391; border: 1px solid #d7cbe9; }
 
 .filtro-remedios { text-align: center; margin: 18px 0 6px; }
 

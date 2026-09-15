@@ -312,6 +312,7 @@ const EV_LABEL = {
   moderada: "Evidencia moderada",
   limitada: "Evidencia limitada · bajo riesgo",
   mixta: "Evidencia mixta",
+  tradicional: "Uso tradicional documentado",
 };
 
 const REMEDIOS = [
@@ -504,6 +505,70 @@ const REMEDIOS = [
     ]
   },
   {
+    nombre: "Eucalipto (cineol)", icono: "🌿", categoria: "respiratorio",
+    uso: "Bronquitis aguda y rinosinusitis: tos, congestión y secreción; el clásico vapor de eucalipto.",
+    preparacion: "La evidencia clínica es con cápsulas orales de cineol (200 mg, 3/día, uso médico). En casa: inhalación de vapor con hojas o 2–3 gotas de aceite esencial en agua caliente.",
+    evidencia: "moderada",
+    evidenciaNota: "ECA doble ciego multicéntrico (n=242): el cineol mejoró el score de bronquitis aguda vs placebo a los 4 días (p=0.038) y redujo los accesos de tos (p=0.0001); ECA en rinosinusitis aguda (Kehrl 2004) con beneficio significativo. Es medicamento registrado en Alemania; la inhalación de vapor casera tiene evidencia más débil que las cápsulas.",
+    seguridad: [
+      "El aceite esencial de eucalipto NO se ingiere: es tóxico por vía oral (convulsiones, incluso en dosis pequeñas).",
+      "Evitar vapores en menores de 2 años (riesgo de laringoespasmo).",
+      "Puede desencadenar broncoespasmo en asmáticos sensibles."
+    ],
+    fuentes: [
+      { nombre: "ECA bronquitis aguda (n=242) — PMC", url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC3842692/" },
+      { nombre: "ECA rinosinusitis Kehrl 2004 — PubMed", url: "https://pubmed.ncbi.nlm.nih.gov/15064633/" }
+    ]
+  },
+  {
+    nombre: "Manzanilla (Matricaria chamomilla)", icono: "🌼", categoria: "digestivo",
+    uso: "Nervios leves y ansiedad leve-moderada; digestión pesada y cólicos: el té de manzanilla de toda la vida.",
+    preparacion: "Té de la flor (1 cda por taza, 2–3 veces al día). Los ensayos clínicos de ansiedad usaron extracto estandarizado en cápsulas.",
+    evidencia: "limitada",
+    evidenciaNota: "ECA (Amsterdam 2009, J Clin Psychopharmacol): reducción modesta pero significativa de la ansiedad generalizada leve-moderada vs placebo; el NCCIH la considera prometedora pero preliminar y no concluyente. Para uso digestivo el respaldo es principalmente tradicional documentado.",
+    seguridad: [
+      "Muy segura en té; posible alergia en personas sensibles a Asteraceae (margarita, ambrosía).",
+      "Precaución teórica con anticoagulantes en uso abundante.",
+      "En embarazo, consumo ocasional en té; evitar extractos concentrados sin indicación."
+    ],
+    fuentes: [
+      { nombre: "NCCIH (NIH) — Chamomile", url: "https://www.nccih.nih.gov/health/chamomile" },
+      { nombre: "ECA Amsterdam 2009 — PubMed", url: "https://pubmed.ncbi.nlm.nih.gov/19593179/" }
+    ]
+  },
+  {
+    nombre: "Toronjil (Melissa officinalis)", icono: "🍃", categoria: "digestivo",
+    uso: "Nervios, dificultad para dormir y malestar digestivo de origen nervioso; la “yerba del susto”.",
+    preparacion: "Té de hojas (1–2 cdtas por taza) por la tarde-noche; en los estudios, extractos de 300–600 mg.",
+    evidencia: "limitada",
+    evidenciaNota: "Revisión 2024 de ensayos clínicos: perfil calmante con mejora de ansiedad y calidad de sueño en varios ECA pequeños; meta-análisis 2021 (Phytother Res) favorable para ansiedad y depresión leve. Faltan ensayos grandes.",
+    seguridad: [
+      "Generalmente segura en té; en dosis altas de extracto puede dar palpitaciones o reducir la alerta.",
+      "Uso tradicional en hipertiroidismo: precaución con levotiroxina (posible interferencia).",
+      "Sin datos de seguridad en embarazo y lactancia."
+    ],
+    fuentes: [
+      { nombre: "Revisión clínica 2024 — PMC", url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC11510126/" },
+      { nombre: "Meta-análisis 2021 — Phytotherapy Research", url: "https://doi.org/10.1002/ptr.7252" }
+    ]
+  },
+  {
+    nombre: "Orégano (Origanum vulgare)", icono: "🌱", categoria: "respiratorio",
+    uso: "Té de orégano para la tos y la garganta: remedio de la abuela con base tradicional sólida, ciencia aún preliminar.",
+    preparacion: "Té de la hoja (1 cdta por taza). Como especia culinaria es seguro y aporta antioxidantes.",
+    evidencia: "tradicional",
+    evidenciaNota: "Documentado en el Atlas de las Plantas de la Medicina Tradicional Mexicana (UNAM/INI). Su actividad antimicrobiana (carvacrol y timol) está probada in vitro y en animales, pero NO hay ensayos clínicos en humanos que demuestren eficacia para infecciones.",
+    seguridad: [
+      "Seguro como alimento y té ocasional.",
+      "El aceite esencial de orégano es irritante: nunca puro en piel ni ingerido sin diluir; no en menores de 5 años.",
+      "No sustituye antibióticos cuando están indicados."
+    ],
+    fuentes: [
+      { nombre: "Atlas de las Plantas de la Medicina Tradicional Mexicana (UNAM/INI)", url: "http://www.medicinatradicionalmexicana.unam.mx/" },
+      { nombre: "Revisión de actividad biológica — PMC", url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC6152729/" }
+    ]
+  },
+  {
     nombre: "Gárgaras con agua tibia y sal", icono: "🧂", categoria: "soporte",
     uso: "Dolor de garganta leve y higiene bucal; medida tradicional de alivio sintomático.",
     preparacion: "½ cucharadita de sal en un vaso de agua tibia; gárgaras 2–3 veces al día sin tragar.",
@@ -580,7 +645,12 @@ async function init() {
   const temas = [...new Set(IDX.meta.docs.map(d => d.tema))];
   const nombreTema = { hipertension: "Hipertensión arterial", diabetes: "Diabetes mellitus tipo 2",
                        dislipidemias: "Dislipidemias", obesidad: "Sobrepeso y obesidad",
-                       epoc: "EPOC", asma: "Asma bronquial", neumonia: "Neumonía adquirida en la comunidad" };
+                       epoc: "EPOC", asma: "Asma bronquial", neumonia: "Neumonía adquirida en la comunidad",
+                       erc: "Enfermedad renal crónica", depresion: "Trastorno depresivo",
+                       ansiedad: "Trastornos de ansiedad", hipotiroidismo: "Hipotiroidismo",
+                       cefalea: "Cefalea y migraña", anemia: "Anemia ferropénica",
+                       ivu: "IVU en la mujer", artritis: "Artritis reumatoide",
+                       osteoporosis: "Osteoporosis" };
   document.getElementById("doclist").innerHTML = temas.map(t => {
     const docs = IDX.meta.docs.filter(d => d.tema === t);
     return `<li class="tema-grupo"><strong>${nombreTema[t] || t}</strong> (${docs.length} fuentes)<ul>` +
