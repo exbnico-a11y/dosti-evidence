@@ -249,6 +249,16 @@ footer {
 }
 .remedio-fuentes a:hover { text-decoration: underline; }
 
+.remedio-enlaces {
+  display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;
+}
+.link-salto {
+  font-size: 12px; font-weight: 600; padding: 6px 12px;
+  background: #eef5f5; color: var(--teal-dark);
+  border: 1px solid var(--teal); border-radius: 14px; cursor: pointer;
+}
+.link-salto:hover { background: var(--teal); color: #fff; }
+
 .aviso-seguridad { margin-top: 20px; border-left: 4px solid var(--accent); }
 .aviso-seguridad a { color: var(--teal); }
 
