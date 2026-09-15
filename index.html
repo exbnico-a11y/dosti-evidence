@@ -249,6 +249,27 @@
     </div>
   </div>
 
+  <div class="modal-overlay" id="modal-ia" hidden>
+    <div class="modal">
+      <h3>Configuración del refinamiento con IA</h3>
+      <p>Opcional. La IA solo <strong>reescribe</strong> las oraciones ya recuperadas de las
+      guías (compacta, ordena y redacta), sin añadir conocimiento externo, y conserva las
+      citas <strong>[n]</strong> a las fuentes. Tu API key se guarda únicamente en el
+      almacenamiento local de este navegador y se envía directamente al proveedor que
+      configures. Sin key, la síntesis extractiva sigue disponible.</p>
+      <label class="ia-label">Endpoint (compatible con OpenAI)</label>
+      <input id="ia-endpoint" type="text" spellcheck="false">
+      <label class="ia-label">Modelo</label>
+      <input id="ia-model" type="text" spellcheck="false">
+      <label class="ia-label">API key</label>
+      <input id="ia-key" type="password" placeholder="sk-…">
+      <div class="modal-acciones">
+        <button id="ia-guardar" class="btn-primario">Guardar</button>
+        <button id="ia-cancelar" class="btn-secundario">Cancelar</button>
+      </div>
+    </div>
+  </div>
+
   <script src="app.js"></script>
 </body>
 </html>

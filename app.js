@@ -296,6 +296,88 @@ function sintetizar(resultados, query, maxOraciones = 4) {
   return elegidas;
 }
 
+/* ---------- refinamiento de síntesis con IA (BYOK) ----------
+   Reescritura asistida por IA de las oraciones ya recuperadas: corta,
+   ordena y redacta en prosa médica, SIN agregar hechos externos y
+   conservando las citas [n] a los fragmentos. Requiere endpoint
+   compatible con OpenAI + API key del propio usuario (localStorage). */
+
+const IA_DEFAULTS = { endpoint: "https://api.openai.com/v1/chat/completions", model: "gpt-4o-mini" };
+
+function iaConfig() {
+  try { return { ...IA_DEFAULTS, ...JSON.parse(localStorage.getItem("dosti_ia") || "{}") }; }
+  catch { return { ...IA_DEFAULTS }; }
+}
+function iaGuardar(cfg) { localStorage.setItem("dosti_ia", JSON.stringify(cfg)); }
+
+function iaPrompt(query, intencion, elegidas) {
+  const fragmentos = elegidas.map(o => `[${o.ref + 1}] ${o.s}`).join("\n");
+  return {
+    system: "Eres un editor médico experto. Reescribes síntesis de guías clínicas oficiales mexicanas para médicos de primer nivel. Reglas absolutas: 1) Usa SOLO la información de los fragmentos numerados; está prohibido añadir conocimiento externo, completar dosis o cifras que no aparezcan. 2) Conserva exactas las cifras, fármacos y dosis citados. 3) Mantén los marcadores [n] al final de cada afirmación que los respalde. 4) Máximo 85 palabras, máximo 3 oraciones, español médico directo y sin relleno. 5) Prioriza lo accionable: qué hacer, con qué dosis/meta y cuándo referir. 6) Si los fragmentos no responden la consulta, responde exactamente: INSUFICIENTE.",
+    user: `Consulta del médico: "${query}" (intención: ${intencion}).\nFragmentos recuperados de las guías oficiales:\n${fragmentos}\n\nEscribe la síntesis refinada cumpliendo las reglas. Devuelve SOLO el texto de la síntesis.`,
+  };
+}
+
+/* valida el texto refinado: cita solo fuentes presentes, sin conocimiento nuevo
+   medible: longitud y presencia de al menos una cita */
+function iaValidar(texto, nFuentes) {
+  if (!texto || /INSUFICIENTE/i.test(texto)) return null;
+  const limpio = texto.trim().replace(/^["']|["']$/g, "");
+  const citas = [...limpio.matchAll(/\[(\d{1,2})\]/g)].map(m => +m[1]);
+  if (!citas.length) return null;
+  if (citas.some(n => n < 1 || n > nFuentes)) return null;
+  return limpio;
+}
+
+async function refinarConIA(query, intencion, elegidas, nFuentes) {
+  const cfg = iaConfig();
+  if (!cfg.key) throw new Error("sin_key");
+  const p = iaPrompt(query, intencion, elegidas);
+  const res = await fetch(cfg.endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${cfg.key}` },
+    body: JSON.stringify({
+      model: cfg.model, temperature: 0.1, max_tokens: 220,
+      messages: [{ role: "system", content: p.system }, { role: "user", content: p.user }],
+    }),
+  });
+  if (!res.ok) throw new Error("http_" + res.status);
+  const data = await res.json();
+  const texto = data.choices && data.choices[0] && data.choices[0].message &&
+    data.choices[0].message.content;
+  const valido = iaValidar(texto, nFuentes);
+  if (!valido) throw new Error("respuesta_invalida");
+  return valido;
+}
+
+/* pinta el texto refinado con citas clicables, reemplazando el bloque .sintesis */
+function pintarRefinada(box, texto, originalHtml, notaEl) {
+  const sintesis = box.querySelector(".sintesis");
+  if (!sintesis) return;
+  const html = texto.replace(/\[(\d{1,2})\]/g, (_, n) =>
+    `<span class="cite" data-c="${+n - 1}">[${n}]</span>`);
+  sintesis.innerHTML = `<p class="sintesis-refinada">${html}</p>`;
+  if (notaEl) notaEl.innerHTML =
+    `Redacción asistida por IA a partir <strong>exclusivamente</strong> de los fragmentos
+     citados (sin conocimiento externo). <a href="#" id="ver-original">Ver síntesis extractiva original</a>.`;
+  sintesis.querySelectorAll(".cite").forEach(el =>
+    el.addEventListener("click", () => {
+      const f = document.getElementById("f" + el.dataset.c);
+      if (f) { f.classList.add("abierta"); f.scrollIntoView({ behavior: "smooth", block: "center" }); }
+    }));
+  const volver = document.getElementById("ver-original");
+  if (volver) volver.addEventListener("click", e => {
+    e.preventDefault();
+    sintesis.innerHTML = originalHtml;
+    if (notaEl) notaEl.textContent = "Respuesta compuesta únicamente con texto recuperado de las fuentes oficiales citadas. Verifica siempre el contexto completo en la página indicada.";
+    box.querySelectorAll(".sintesis .cite").forEach(el =>
+      el.addEventListener("click", () => {
+        const f = document.getElementById("f" + el.dataset.c);
+        if (f) { f.classList.add("abierta"); f.scrollIntoView({ behavior: "smooth", block: "center" }); }
+      }));
+  });
+}
+
 /* ---------- render ---------- */
 
 function chunkInfo(cid) {
@@ -371,9 +453,35 @@ function render(resultados, query) {
     html += `<div class="frag">${recorte} <span class="cite" data-c="${i}">[${i + 1}]</span></div>`;
   });
   html += `</details>`;
-  html += `<p class="nota">Respuesta compuesta únicamente con texto recuperado de las
+  html += `<p class="nota" id="nota-respuesta">Respuesta compuesta únicamente con texto recuperado de las
     fuentes oficiales citadas. Verifica siempre el contexto completo en la página indicada.</p>`;
+  if (sintesis.length) {
+    html += `<div class="acciones-ia"><button id="btn-ia" class="btn-ia">✨ Refinar redacción con IA</button>
+      <button id="btn-ia-config" class="btn-ia-config" title="Configurar API key y modelo">⚙️</button></div>`;
+  }
   box.innerHTML = html;
+
+  // --- refinamiento IA (opcional, BYOK) ---
+  const btnIA = box.querySelector("#btn-ia");
+  const originalHtml = sintesis.length ? box.querySelector(".sintesis").innerHTML : null;
+  btnIA.addEventListener("click", async () => {
+    if (!iaConfig().key) { abrirModalIA(); if (!iaConfig().key) return; }
+    btnIA.disabled = true;
+    btnIA.textContent = "✨ Refinando…";
+    try {
+      const texto = await refinarConIA(query, intencion, sintesis, resultados.length);
+      pintarRefinada(box, texto, originalHtml, box.querySelector("#nota-respuesta"));
+      btnIA.textContent = "✓ Refinada";
+    } catch (e) {
+      btnIA.disabled = false;
+      btnIA.textContent = "✨ Reintentar refinamiento";
+      const nota = box.querySelector("#nota-respuesta");
+      nota.innerHTML = e.message === "sin_key"
+        ? "Configura tu API key (botón ⚙️) para usar el refinamiento con IA."
+        : `El refinamiento con IA no estuvo disponible (${e.message}). La síntesis extractiva se mantiene.`;
+    }
+  });
+  box.querySelector("#btn-ia-config").addEventListener("click", abrirModalIA);
 
   // P0-3: fuentes colapsadas por defecto; clic expande nombre completo + fragmento
   fuentes.innerHTML = resultados.map(([cid], i) => {
@@ -402,6 +510,30 @@ function render(resultados, query) {
 }
 
 /* ---------- verificación de cédula (demo) ---------- */
+
+/* ---------- configuración IA (modal) ---------- */
+
+function abrirModalIA() {
+  const modal = document.getElementById("modal-ia");
+  const cfg = iaConfig();
+  document.getElementById("ia-endpoint").value = cfg.endpoint;
+  document.getElementById("ia-model").value = cfg.model;
+  document.getElementById("ia-key").value = cfg.key || "";
+  modal.hidden = false;
+}
+function cerrarModalIA() { document.getElementById("modal-ia").hidden = true; }
+
+function initModalIA() {
+  document.getElementById("ia-guardar").addEventListener("click", () => {
+    iaGuardar({
+      endpoint: document.getElementById("ia-endpoint").value.trim() || IA_DEFAULTS.endpoint,
+      model: document.getElementById("ia-model").value.trim() || IA_DEFAULTS.model,
+      key: document.getElementById("ia-key").value.trim(),
+    });
+    cerrarModalIA();
+  });
+  document.getElementById("ia-cancelar").addEventListener("click", cerrarModalIA);
+}
 
 function initCedula() {
   const badge = document.getElementById("badge-demo");
@@ -848,6 +980,13 @@ function initRemedios() {
 let RUN_QUERY = null; // la asigna init() al crear `run`
 
 function irA(vista, q, tema) {
+  if (vista === "seguridad") {
+    const tabR = document.querySelector('.tabs .tab[data-vista="remedios"]');
+    if (tabR) tabR.click();
+    const aviso = document.querySelector(".aviso-seguridad");
+    if (aviso) aviso.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
   const tab = document.querySelector(`.tabs .tab[data-vista="${vista}"]`);
   if (tab) tab.click();
   if (vista === "buscador" && q && RUN_QUERY) {
@@ -905,6 +1044,7 @@ async function init() {
   document.getElementById("cargando").hidden = true;
 
   initCedula();
+  initModalIA();
   initFarmacos();
   initRemedios();
   initTabs();
