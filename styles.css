@@ -1,0 +1,163 @@
+:root {
+  --teal: #0e7c7b;
+  --teal-dark: #0a5c5b;
+  --bg: #f6f9f9;
+  --card: #ffffff;
+  --text: #1d2b2b;
+  --muted: #5f7474;
+  --border: #dce8e8;
+  --accent: #c0392b;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.55;
+}
+
+.topbar {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 14px 24px; background: var(--card); border-bottom: 1px solid var(--border);
+}
+.brand { display: flex; gap: 12px; align-items: center; }
+.logo { font-size: 30px; }
+h1 { font-size: 20px; color: var(--teal-dark); }
+.tagline { font-size: 12.5px; color: var(--muted); }
+.badge-demo {
+  font-size: 12px; background: #fff4e5; color: #8a5a00;
+  border: 1px solid #f0d9b0; padding: 5px 10px; border-radius: 20px;
+}
+
+.disclaimer {
+  background: #fdecea; color: var(--accent);
+  text-align: center; font-size: 13.5px; padding: 9px 16px;
+  border-bottom: 1px solid #f5c6c0;
+}
+
+main { max-width: 1080px; margin: 0 auto; padding: 28px 20px 60px; }
+
+.hero { text-align: center; margin: 34px 0 26px; }
+.hero h2 { font-size: 26px; margin-bottom: 18px; }
+
+.searchbox {
+  display: flex; gap: 8px; max-width: 720px; margin: 0 auto;
+}
+.searchbox input {
+  flex: 1; padding: 14px 18px; font-size: 16px;
+  border: 2px solid var(--border); border-radius: 12px; outline: none;
+}
+.searchbox input:focus { border-color: var(--teal); }
+.searchbox button {
+  padding: 14px 22px; font-size: 15px; font-weight: 600;
+  background: var(--teal); color: #fff; border: none; border-radius: 12px;
+  cursor: pointer;
+}
+.searchbox button:hover { background: var(--teal-dark); }
+
+.ejemplos { margin-top: 14px; font-size: 13px; color: var(--muted); }
+.chip {
+  margin: 4px 3px; padding: 6px 12px; font-size: 12.5px;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; cursor: pointer; color: var(--teal-dark);
+}
+.chip:hover { border-color: var(--teal); }
+
+.layout {
+  display: grid; grid-template-columns: 1fr 330px; gap: 20px; margin-top: 26px;
+}
+.layout[hidden] { display: none; }
+#inicio[hidden] { display: none; }
+@media (max-width: 860px) { .layout { grid-template-columns: 1fr; } }
+
+.card {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 14px; padding: 20px 22px;
+}
+
+.respuesta h3 { color: var(--teal-dark); font-size: 17px; margin-bottom: 10px; }
+.respuesta p { margin-bottom: 12px; }
+.respuesta .frag {
+  border-left: 3px solid var(--teal); padding-left: 12px; margin: 12px 0;
+  font-size: 14.5px;
+}
+.cite {
+  display: inline-block; font-size: 11px; font-weight: 700; color: #fff;
+  background: var(--teal); border-radius: 4px; padding: 1px 6px;
+  margin: 0 3px; cursor: pointer; vertical-align: super;
+}
+.sin-resultados { color: var(--muted); font-style: italic; }
+
+.fuentes-col h3 { font-size: 15px; margin-bottom: 10px; color: var(--teal-dark); }
+.fuente {
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 12px; padding: 12px 14px; margin-bottom: 10px; font-size: 13px;
+}
+.fuente .n {
+  display: inline-block; font-weight: 700; color: #fff; background: var(--teal);
+  border-radius: 4px; padding: 0 6px; margin-right: 6px; font-size: 11.5px;
+}
+.fuente .doc { font-weight: 600; color: var(--teal-dark); }
+.fuente .pag { color: var(--muted); font-size: 12px; }
+.fuente .snip { margin-top: 6px; color: var(--muted); font-size: 12.5px;
+  max-height: 88px; overflow: hidden; }
+
+.intro { margin-top: 10px; }
+.intro h3 { color: var(--teal-dark); margin-bottom: 8px; }
+.intro p { font-size: 14px; color: var(--muted); margin-bottom: 10px; }
+.intro li { font-size: 13.5px; margin: 4px 0 4px 20px; }
+
+footer {
+  text-align: center; font-size: 12px; color: var(--muted);
+  padding: 20px; border-top: 1px solid var(--border); background: var(--card);
+}
+
+/* --- síntesis, modal y tabla de fármacos --- */
+.sintesis { font-size: 15px; }
+.sintesis p { margin-bottom: 12px; }
+.nota { font-size: 12px; color: var(--muted); margin-top: 10px; }
+.fragmentos { margin-top: 14px; font-size: 13px; color: var(--muted); }
+.fragmentos summary { cursor: pointer; font-weight: 600; color: var(--teal-dark); margin-bottom: 8px; }
+
+.modal-overlay {
+  position: fixed; inset: 0; background: rgba(20, 40, 40, 0.45);
+  display: flex; align-items: center; justify-content: center; z-index: 50;
+}
+.modal {
+  background: var(--card); border-radius: 16px; padding: 26px 28px;
+  max-width: 440px; width: calc(100% - 40px); box-shadow: 0 12px 40px rgba(0,0,0,0.2);
+}
+.modal h3 { color: var(--teal-dark); margin-bottom: 10px; }
+.modal p { font-size: 13.5px; color: var(--muted); margin-bottom: 14px; }
+.modal input {
+  width: 100%; padding: 12px 14px; font-size: 16px;
+  border: 2px solid var(--border); border-radius: 10px; outline: none;
+}
+.modal input:focus { border-color: var(--teal); }
+.error { color: var(--accent); font-size: 12.5px; min-height: 18px; margin: 6px 0 0; }
+.modal-acciones { display: flex; gap: 10px; margin-top: 12px; }
+.btn-primario {
+  flex: 1; padding: 12px; font-size: 14.5px; font-weight: 600;
+  background: var(--teal); color: #fff; border: none; border-radius: 10px; cursor: pointer;
+}
+.btn-primario:hover { background: var(--teal-dark); }
+.btn-secundario {
+  flex: 1; padding: 12px; font-size: 14.5px; background: var(--card);
+  color: var(--teal-dark); border: 1px solid var(--border); border-radius: 10px; cursor: pointer;
+}
+
+#filtro-farmacos {
+  width: 100%; padding: 10px 14px; font-size: 14px; margin: 8px 0 12px;
+  border: 2px solid var(--border); border-radius: 10px; outline: none;
+}
+#filtro-farmacos:focus { border-color: var(--teal); }
+.tabla-farmacos { width: 100%; border-collapse: collapse; font-size: 13px; }
+.tabla-farmacos th, .tabla-farmacos td {
+  text-align: left; padding: 8px 10px; border-bottom: 1px solid var(--border); vertical-align: top;
+}
+.tabla-farmacos th { background: #eef5f5; color: var(--teal-dark); font-size: 12px; }
+.tabla-farmacos tr:hover td { background: #f4fafa; }
+.tabla-farmacos .clave { font-family: ui-monospace, monospace; font-size: 12px; white-space: nowrap; }
+.tabla-farmacos em { color: var(--muted); font-size: 11.5px; }

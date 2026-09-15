@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dosti Evidence — Apoyo clínico basado en guías oficiales de México</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <span class="logo">🩺</span>
+      <div>
+        <h1>Dosti Evidence</h1>
+        <p class="tagline">Evidencia oficial mexicana, con cita. Para médicos.</p>
+      </div>
+    </div>
+    <div class="badge-demo" id="badge-demo">Demo sin verificación de cédula</div>
+  </header>
+
+  <div class="disclaimer">
+    ⚠️ <strong>Herramienta de apoyo a la decisión clínica.</strong>
+    No sustituye el juicio médico ni las guías oficiales vigentes.
+    Toda recomendación debe verificarse en la fuente citada.
+  </div>
+
+  <main>
+    <section class="hero" id="hero">
+      <h2>¿Qué necesitas resolver hoy en consulta?</h2>
+      <div class="searchbox">
+        <input id="q" type="text" autocomplete="off"
+          placeholder="Ej.: tratamiento farmacológico inicial en hipertensión grado 2…">
+        <button id="btn">Buscar evidencia</button>
+      </div>
+      <div class="ejemplos">
+        <span>Ejemplos:</span>
+        <button class="chip" data-q="meta de presión arterial en adulto mayor">Meta de PA en adulto mayor</button>
+        <button class="chip" data-q="tratamiento farmacológico inicial hipertensión grado 2">Tratamiento inicial HTA grado 2</button>
+        <button class="chip" data-q="interacción IECA con ARA II">IECA + ARA II</button>
+        <button class="chip" data-q="emergencia hipertensiva criterios de referencia">Crisis hipertensiva: referencia</button>
+        <button class="chip" data-q="medidas no farmacológicas reducción de sodio">Medidas no farmacológicas</button>
+      </div>
+    </section>
+
+    <section class="layout" id="resultados" hidden>
+      <div class="respuesta-col">
+        <div id="respuesta" class="card respuesta"></div>
+      </div>
+      <aside class="fuentes-col">
+        <h3>Fuentes citadas</h3>
+        <div id="fuentes"></div>
+      </aside>
+    </section>
+
+    <section id="inicio">
+      <div class="card intro">
+        <h3>Base de conocimiento — Hipertensión arterial sistémica</h3>
+        <p>Esta demo responde <strong>solo</strong> con fragmentos de documentos oficiales.
+        Cada afirmación enlaza a su fuente y página.</p>
+        <ul id="doclist"></ul>
+      </div>
+
+      <div class="card intro">
+        <h3>Referencia rápida — Antihipertensivos del Cuadro Básico (CAUSES)</h3>
+        <input id="filtro-farmacos" type="text" placeholder="Filtrar por fármaco, combinación o clave…">
+        <table class="tabla-farmacos">
+          <thead><tr><th>Fármaco</th><th>Clave CAUSES</th><th>Presentación</th><th>Notas / contraindicaciones</th></tr></thead>
+          <tbody id="lista-farmacos"></tbody>
+        </table>
+        <p id="fuente-farmacos" class="nota"></p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <p>Fuentes: CENETEC · IMSS · Secretaría de Salud (NOM-030-SSA2-2009) · gob.mx.
+    Índice generado el 2026-09-15 (v0.2 — 1,126 fragmentos, 7 documentos). Las guías clínicas se actualizan periódicamente.</p>
+  </footer>
+
+  <div class="modal-overlay" id="modal-cedula">
+    <div class="modal">
+      <h3>Verificación de médico (demo)</h3>
+      <p>Dosti Evidence está diseñado para médicos con cédula profesional vigente.
+      En esta demo la validación es <strong>de formato únicamente</strong>;
+      la verificación ante la DGP/SEP se integrará en la versión productiva.</p>
+      <input id="cedula" type="text" inputmode="numeric" placeholder="Cédula profesional (7–9 dígitos)">
+      <p class="error" id="cedula-error"></p>
+      <div class="modal-acciones">
+        <button id="btn-cedula" class="btn-primario">Verificar y entrar</button>
+        <button id="btn-invitado" class="btn-secundario">Explorar como invitado</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
