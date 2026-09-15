@@ -916,6 +916,62 @@ const REMEDIOS = [
   },
 ];
 
+/* Enlaces de salto para los remedios sin `enlaces` inline en REMEDIOS */
+const ENLACES_EXTRA = {
+  "Psyllium (Plantago ovata)": [
+    { texto: "🔎 Guías oficiales: metas de LDL en dislipidemia", vista: "buscador",
+      q: "metas de LDL dislipidemia", tema: "dislipidemias" }
+  ],
+  "Miel de abeja": [
+    { texto: "🔎 Guías oficiales: cuándo sí va antibiótico (NAC)", vista: "buscador",
+      q: "criterios de antibiótico neumonía adquirida en la comunidad", tema: "neumonia" }
+  ],
+  "Lavado nasal con solución salina": [
+    { texto: "🔎 Guías oficiales: datos de alarma en infección respiratoria", vista: "buscador",
+      q: "datos de alarma referencia neumonía", tema: "neumonia" }
+  ],
+  "Zinc en pastillas para chupar": [
+    { texto: "🔎 Guías oficiales: cuándo sí va antibiótico (NAC)", vista: "buscador",
+      q: "criterios de antibiótico neumonía adquirida en la comunidad", tema: "neumonia" }
+  ],
+  "Jengibre (Zingiber officinale)": [
+    { texto: "⚠️ Embarazo y anticoagulantes: ver reglas de seguridad", vista: "seguridad" }
+  ],
+  "Aceite de menta (Mentha piperita)": [
+    { texto: "⚠️ Pirosis, ERGE y niños: ver reglas de seguridad", vista: "seguridad" }
+  ],
+  "Probióticos (yogur, cepas vivas)": [
+    { texto: "🔎 Guías oficiales: antibiótico de primera línea en NAC", vista: "buscador",
+      q: "antibiótico de primera línea neumonía", tema: "neumonia" }
+  ],
+  "Sábila (Aloe vera) tópica": [
+    { texto: "⚠️ Quemaduras graves y heridas: ver reglas de seguridad", vista: "seguridad" }
+  ],
+  "Caldo de pollo, reposo e hidratación": [
+    { texto: "🔎 Guías oficiales: datos de alarma en infección respiratoria", vista: "buscador",
+      q: "datos de alarma referencia neumonía", tema: "neumonia" }
+  ],
+  "Eucalipto (cineol)": [
+    { texto: "🔎 Guías oficiales: tratamiento del EPOC", vista: "buscador",
+      q: "tratamiento EPOC estable y exacerbación", tema: "epoc" },
+    { texto: "🔎 Guías oficiales: tratamiento del asma", vista: "buscador",
+      q: "tratamiento asma bronquial", tema: "asma" }
+  ],
+  "Manzanilla (Matricaria chamomilla)": [
+    { texto: "⚠️ Alergia y embarazo: ver reglas de seguridad", vista: "seguridad" }
+  ],
+  "Toronjil (Melissa officinalis)": [
+    { texto: "⚠️ Tiroides, embarazo y lactancia: ver reglas de seguridad", vista: "seguridad" }
+  ],
+  "Orégano (Origanum vulgare)": [
+    { texto: "🔎 Guías oficiales: cuándo sí va antibiótico (NAC)", vista: "buscador",
+      q: "criterios de antibiótico neumonía adquirida en la comunidad", tema: "neumonia" }
+  ],
+  "Gárgaras con agua tibia y sal": [
+    { texto: "⚠️ Datos de alarma en dolor de garganta: ver reglas de seguridad", vista: "seguridad" }
+  ]
+};
+
 function initRemedios() {
   const lista = document.getElementById("lista-remedios");
   const inputTexto = document.getElementById("filtro-remedios-texto");
@@ -949,7 +1005,7 @@ function initRemedios() {
         <div class="remedio-fuentes">
           ${r.fuentes.map(f => `<a href="${f.url}" target="_blank" rel="noopener">${f.nombre} ↗</a>`).join("")}
         </div>
-        ${r.enlaces ? `<div class="remedio-enlaces">` + r.enlaces.map((e, i) =>
+        ${(r.enlaces || ENLACES_EXTRA[r.nombre]) ? `<div class="remedio-enlaces">` + (r.enlaces || ENLACES_EXTRA[r.nombre]).map((e, i) =>
           `<button class="link-salto" data-r="${REMEDIOS.indexOf(r)}" data-e="${i}">${e.texto}</button>`
         ).join("") + `</div>` : ""}
       </div>`).join("")
@@ -963,7 +1019,8 @@ function initRemedios() {
   lista.addEventListener("click", ev => {
     const b = ev.target.closest(".link-salto");
     if (!b) return;
-    const e = REMEDIOS[+b.dataset.r].enlaces[+b.dataset.e];
+    const r0 = REMEDIOS[+b.dataset.r];
+    const e = (r0.enlaces || ENLACES_EXTRA[r0.nombre])[+b.dataset.e];
     irA(e.vista, e.q, e.tema);
   });
   document.querySelectorAll(".filtro-remedios .chip-tema").forEach(ch =>
