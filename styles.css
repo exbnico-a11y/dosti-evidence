@@ -161,3 +161,8 @@ footer {
 .tabla-farmacos tr:hover td { background: #f4fafa; }
 .tabla-farmacos .clave { font-family: ui-monospace, monospace; font-size: 12px; white-space: nowrap; }
 .tabla-farmacos em { color: var(--muted); font-size: 11.5px; }
+
+/* --- v2: carga y vigencia --- */
+.cargando { margin-top: 12px; font-size: 13px; color: var(--muted); font-style: italic; }
+.intro li .vig { font-size: 12px; color: var(--muted); }
+.intro li { margin-bottom: 8px; }

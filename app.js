@@ -1,5 +1,5 @@
-/* Dosti Evidence — búsqueda TF-IDF estricta sobre guías oficiales MX.
-   Respuesta SINTETIZADA extractivamente: solo oraciones de fragmentos
+/* Dosti Evidence v2 — BM25 estricto sobre guías oficiales MX.
+   Respuesta sintetizada extractivamente: solo oraciones de fragmentos
    recuperados, con citas inline [n]. Sin conocimiento libre del modelo. */
 let IDX = null;
 
@@ -11,41 +11,80 @@ const STOP = new Set(("a al algo algunas algunos ante antes como con contra cual
   "otros para pero poco por porque que quien quienes se sea sean ser si sin sobre " +
   "son soy su sus te tiene tienen todo todos un una unas uno unos y ya").split());
 
+/* Expansión de siglas clínicas: si el término original no existe en el índice,
+   se intenta su expansión (precisión primero). */
+const EXPAND = {
+  hta: ["hipertension"], has: ["hipertension"],
+  pa: ["presion"], pas: ["presion", "sistolica"], pad: ["presion", "diastolica"],
+  rcv: ["riesgo", "cardiovascular"],
+  ieca: ["inhibidor", "enzima", "convertidora"],
+  ara: ["antagonista", "receptor", "angiotensina"], bra: ["antagonista", "receptor", "angiotensina"],
+  bcc: ["bloqueador", "canal", "calcio"],
+  hctz: ["hidroclorotiazida"],
+  dm: ["diabetes", "mellitus"], dmt2: ["diabetes", "mellitus"],
+  fge: ["filtrado", "glomerular"], fg: ["filtrado", "glomerular"],
+  mapa: ["monitoreo", "ambulatorio"], mdpa: ["monitoreo", "domiciliario"],
+  imc: ["indice", "masa", "corporal"],
+  iam: ["infarto", "miocardio"],
+  aine: ["antiinflamatorio", "no", "esteroideo"],
+  ea: ["estilo", "vida"],
+};
+
 const norm = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "");
+
+function rawTerms(text) {
+  return norm(text.toLowerCase()).match(/[a-z0-9]+/g) || [];
+}
 
 function tokenize(text) {
   const out = [];
-  for (const w of norm(text.toLowerCase()).match(/[a-z0-9]+/g) || []) {
+  for (const w of rawTerms(text)) {
     if (w.length >= 3 && !STOP.has(w)) out.push(w);
   }
   return out;
 }
 
-/* ---------- búsqueda ---------- */
+/* ---------- búsqueda BM25 ---------- */
+
+const K1 = 1.5, B = 0.75;
 
 function buscar(query, k = 10) {
   const terms = tokenize(query);
   if (!terms.length) return [];
-  const scores = new Map();
+  const N = IDX.meta.total, avgdl = IDX.meta.avgdl;
+
+  // resolver términos (con expansión de siglas como respaldo)
+  const resolved = [];
   for (const t of terms) {
-    const idf = IDX.idf[t];
-    if (!idf) continue;
-    const post = IDX.postings[t];
-    if (!post) continue;
-    for (const [cid, w] of Object.entries(post)) {
-      scores.set(+cid, (scores.get(+cid) || 0) + w * idf);
+    if (IDX.idf[t] !== undefined) { resolved.push({ t, w: 1 }); continue; }
+    const exp = EXPAND[t];
+    if (exp && exp.every(e => IDX.idf[e] !== undefined)) {
+      exp.forEach((e, i) => resolved.push({ t: e, w: i === 0 ? 0.9 : 0.6 }));
     }
   }
-  const ranked = [...scores.entries()]
-    .map(([cid, s]) => [cid, s / (IDX.normas[cid] || 1)])
-    .sort((a, b) => b[1] - a[1]);
+  if (!resolved.length) return [];
+
+  const scores = new Map();
+  for (const { t, w } of resolved) {
+    const idf = IDX.idf[t];
+    const post = IDX.postings[t];
+    if (!post) continue;
+    for (const cid in post) {
+      const tf = post[cid];
+      const dl = IDX.dls[cid];
+      const bm = idf * (tf * (K1 + 1)) / (tf + K1 * (1 - B + B * dl / avgdl));
+      scores.set(+cid, (scores.get(+cid) || 0) + bm * w);
+    }
+  }
+  const ranked = [...scores.entries()].sort((a, b) => b[1] - a[1]);
+
   const porPagina = new Map(), sel = [];
   for (const [cid, sc] of ranked) {
     const c = IDX.chunks[cid];
-    const key = c.doc + ":" + c.pagina;
+    const key = c[0] + ":" + c[1];
     const n = porPagina.get(key) || 0;
     if (n >= 2) continue;
-    const t = c.texto;
+    const t = c[2];
     if (t.length < 120) continue;
     if ((t.match(/\.{4,}/g) || []).length > 2) continue;
     if (/www\.|http/i.test(t) && t.length < 250) continue;
@@ -70,29 +109,28 @@ function simJaccard(a, b) {
   return A.size + B.size ? inter / (A.size + B.size - inter) : 0;
 }
 
-function puntuarOracion(s, terms) {
+function puntuarOracion(s, termSet) {
   const toks = tokenize(s);
   if (toks.length < 4 || s.length < 40) return -1;
   let s_ = 0, hits = 0;
   for (const t of toks) {
     const idf = IDX.idf[t];
     if (idf) s_ += idf;
-    if (terms.includes(t)) hits++;
+    if (termSet.has(t)) hits++;
   }
   if (!hits) return -1;
-  // bonus por contenido decisorio: cifras, dosis, verbos de recomendación
   let bonus = 0;
   if (/\d/.test(s)) bonus += 0.6;
   if (/recomiend|sugier|debe|iniciar|administrar|mantener|suspender|referir/i.test(s)) bonus += 0.8;
-  return (s_ * (1 + hits / terms.length) + bonus * hits) / Math.sqrt(toks.length);
+  return (s_ * (1 + hits / termSet.size) + bonus * hits) / Math.sqrt(toks.length);
 }
 
 function sintetizar(resultados, query, maxOraciones = 8) {
-  const terms = tokenize(query);
+  const termSet = new Set(tokenize(query));
   const candidatas = [];
   resultados.forEach(([cid], ci) => {
-    for (const s of oraciones(IDX.chunks[cid].texto)) {
-      const p = puntuarOracion(s, terms);
+    for (const s of oraciones(IDX.chunks[cid][2])) {
+      const p = puntuarOracion(s, termSet);
       if (p > 0) candidatas.push({ s: s.trim(), p, ref: ci, cid });
     }
   });
@@ -111,6 +149,12 @@ function sintetizar(resultados, query, maxOraciones = 8) {
 
 /* ---------- render ---------- */
 
+function chunkInfo(cid) {
+  const c = IDX.chunks[cid];
+  const doc = IDX.meta.docs[c[0]];
+  return { docCorto: doc.corto, docNombre: doc.nombre, pagina: c[1], texto: c[2] };
+}
+
 function limpiar(t) { return t.replace(/\s+/g, " ").trim(); }
 
 function render(resultados, query) {
@@ -122,7 +166,7 @@ function render(resultados, query) {
   if (!resultados.length) {
     box.innerHTML = `<p class="sin-resultados">Sin resultados suficientes en las guías
       cargadas para: “${query}”. Reformula con términos clínicos
-      (fármacos, cifras de PA, comorbilidades).</p>`;
+      (fármacos, cifras de PA, comorbilidades) o sus siglas (HTA, IECA, BCC…).</p>`;
     fuentes.innerHTML = "";
     return;
   }
@@ -132,7 +176,6 @@ function render(resultados, query) {
   let html = `<h3>Respuesta basada en guías oficiales</h3>`;
   if (sintesis.length) {
     html += `<div class="sintesis">`;
-    // párrafos: agrupa de 3 en 3
     for (let i = 0; i < sintesis.length; i += 3) {
       html += "<p>" + sintesis.slice(i, i + 3).map(o =>
         `${o.s} <span class="cite" data-c="${o.ref}">[${o.ref + 1}]</span>`
@@ -142,8 +185,8 @@ function render(resultados, query) {
   }
   html += `<details class="fragmentos"><summary>Ver fragmentos completos de las fuentes</summary>`;
   resultados.forEach(([cid], i) => {
-    const c = IDX.chunks[cid];
-    const txt = limpiar(c.texto);
+    const info = chunkInfo(cid);
+    const txt = limpiar(info.texto);
     const recorte = txt.length > 700 ? txt.slice(0, 700).replace(/\s\S*$/, "") + "…" : txt;
     html += `<div class="frag">${recorte} <span class="cite" data-c="${i}">[${i + 1}]</span></div>`;
   });
@@ -153,11 +196,11 @@ function render(resultados, query) {
   box.innerHTML = html;
 
   fuentes.innerHTML = resultados.map(([cid], i) => {
-    const c = IDX.chunks[cid];
-    const snip = limpiar(c.texto).slice(0, 260);
+    const info = chunkInfo(cid);
+    const snip = limpiar(info.texto).slice(0, 260);
     return `<div class="fuente" id="f${i}">
-      <span class="n">[${i + 1}]</span><span class="doc">${c.doc_corto}</span>
-      <div class="pag">${c.doc} · página ${c.pagina}</div>
+      <span class="n">[${i + 1}]</span><span class="doc">${info.docCorto}</span>
+      <div class="pag">${info.docNombre} · página ${info.pagina}</div>
       <div class="snip">${snip}…</div></div>`;
   }).join("");
 
@@ -200,7 +243,7 @@ function initCedula() {
   });
 }
 
-/* ---------- referencia de fármacos (Cuadro Básico, GPC-076-21) ---------- */
+/* ---------- referencia de fármacos (Cuadro Básico, GPC-238-09/GPC-076-21) ---------- */
 
 const FARMACOS = [
   { clave: "010.000.2521.00", nombre: "Losartán / Hidroclorotiazida",
@@ -244,7 +287,7 @@ const FARMACOS = [
 function initFarmacos() {
   const list = document.getElementById("lista-farmacos");
   const input = document.getElementById("filtro-farmacos");
-  const fuente = "Fuente: GPC-IMSS-076-21, Cuadro de medicamentos del Cuadro Básico y Catálogo de Insumos del Sector Salud (CAUSES), págs. 81–90.";
+  const fuente = "Fuente: Cuadro de medicamentos del Cuadro Básico y Catálogo de Insumos del Sector Salud (CAUSES) reproducido en las GPC oficiales, págs. 81–90.";
   const pintar = f => {
     list.innerHTML = FARMACOS.filter(x =>
       !f || (x.nombre + x.clave + x.notas).toLowerCase().includes(f.toLowerCase()))
@@ -263,7 +306,9 @@ async function init() {
   const res = await fetch("index.json");
   IDX = await res.json();
   document.getElementById("doclist").innerHTML = IDX.meta.docs
-    .map(d => `<li>${d}</li>`).join("");
+    .map(d => `<li><strong>${d.nombre}</strong><br><span class="vig">${d.vigencia}</span></li>`)
+    .join("");
+  document.getElementById("cargando").hidden = true;
 
   initCedula();
   initFarmacos();
