@@ -26,6 +26,7 @@
 
   <nav class="tabs">
     <button class="tab activo" data-vista="buscador">🔎 Buscador de evidencia</button>
+    <button class="tab" data-vista="algoritmo">🫀 Algoritmo HTA</button>
     <button class="tab" data-vista="remedios">🌿 Remedios caseros con evidencia</button>
   </nav>
 
@@ -78,6 +79,77 @@
       </aside>
     </section>
 
+    <section id="algoritmo" hidden>
+      <div class="card intro">
+        <h3>🫀 Algoritmo clínico — Hipertensión arterial (primer nivel)</h3>
+        <p>Secuencia decisión → acción según la GPC-IMSS-076 (Referencia Rápida,
+        Cuadros II–IV y diagramas de flujo) y la GPC-IMSS-076-21. Es una síntesis
+        de consulta: la fuente completa manda.</p>
+      </div>
+
+      <ol class="flow">
+        <li class="paso">
+          <h4>1 · Medir y confirmar el diagnóstico</h4>
+          <p>Toma estandarizada (brazo apoyado, brazalete adecuado). La HAS se
+          caracteriza por elevación persistente <strong>≥ 140/90 mm Hg</strong>.
+          Confirmar en consultas repetidas o con MAPA/MDPA antes de etiquetar.</p>
+        </li>
+        <li class="paso bifurca">
+          <h4>2 · Clasificar grado (Cuadro II)</h4>
+          <div class="ramas">
+            <div class="rama"><strong>Grado 1</strong>140–159 / 90–99</div>
+            <div class="rama"><strong>Grado 2</strong>160–179 / 100–109</div>
+            <div class="rama"><strong>Grado 3</strong>≥ 180 / ≥ 110</div>
+          </div>
+          <p class="nota">Hipertensión sistólica aislada: PAS ≥ 140 con PAD &lt; 90,
+          graduada por la cifra sistólica.</p>
+        </li>
+        <li class="paso">
+          <h4>3 · Estratificar riesgo cardiovascular (Cuadros III–IV)</h4>
+          <p>Factores: sexo, edad (&gt;55 H / &gt;65 M), tabaquismo, dislipidemia
+          (CT &gt;190, LDL &gt;115, TG &gt;150), glucemia anormal (102–125),
+          más DM, ERC o daño de órgano blanco. RCV bajo / moderado / alto.</p>
+        </li>
+        <li class="paso">
+          <h4>4 · Medidas generales en todos los grados</h4>
+          <p>Reducción de sal (meta 5–6 g/día), dieta DASH, IMC 18.5–24.9,
+          ejercicio aeróbico moderado, suspensión de tabaco, manejo del estrés.</p>
+        </li>
+        <li class="paso bifurca">
+          <h4>5 · Iniciar tratamiento farmacológico</h4>
+          <div class="ramas">
+            <div class="rama"><strong>Grado 1, RCV bajo</strong>Monoterapia: IECA, ARA II, BCC o diurético tiazídico.</div>
+            <div class="rama"><strong>Grado 2–3, o RCV alto</strong>Inicio inmediato; preferir combinación (IECA/ARA II + BCC o tiazídico). PAS ≥ 180 <em>y</em> PAD ≥ 110: iniciar de inmediato con cualquier RCV.</div>
+          </div>
+          <p class="nota">DM o proteinuria: preferir IECA o ARA II. Meta en DM:
+          PAS &lt; 130 y PAD &lt; 80 mm Hg (GRR). Presentaciones y claves del
+          Cuadro Básico en la pestaña de referencia de fármacos.</p>
+        </li>
+        <li class="paso">
+          <h4>6 · Vigilancia y control</h4>
+          <p>RCV bajo y controlado: valorar cada 3 meses. RCV alto o cifras
+          descontroladas: cada 2–4 semanas, individualizando.</p>
+        </li>
+        <li class="paso bifurca">
+          <h4>7 · ¿Controlado (&lt; 140/90)?</h4>
+          <div class="ramas">
+            <div class="rama"><strong>Sí</strong>Mantener tratamiento y hábitos; continuar vigilancia.</div>
+            <div class="rama"><strong>No</strong>Ajustar dosis o combinar (triple terapia). Si toma 3 fármacos → valorar HTA resistente: añadir espironolactona 25 mg c/24 h vigilando TFG (o bloqueadores si no tolera).</div>
+          </div>
+        </li>
+        <li class="paso referencia">
+          <h4>8 · Referir a segundo nivel si</h4>
+          <p>Emergencia hipertensiva o sospecha de daño agudo de órgano blanco;
+          sospecha de hipertensión secundaria; HTA resistente a 3 fármacos
+          optimizados; complicaciones (ERC avanzada, enfermedad vascular
+          establecida); o a petición del médico tratante.</p>
+        </li>
+      </ol>
+      <p class="nota algoritmo-fuente">Fuente: GPC-IMSS-076-08 Referencia Rápida
+      (actualización 2014) y GPC-IMSS-076-21 (Evidencias y Recomendaciones, 2021).
+      Simplificación para consulta; no sustituye la guía completa.</p>
+    </section>
+
     <section id="remedios" hidden>
       <div class="card intro remedios-intro">
         <h3>🌿 Remedios caseros y herbolaria con evidencia</h3>
@@ -96,6 +168,11 @@
           <span class="badge-ev mixta">Evidencia mixta</span>
           <span class="badge-ev tradicional">Uso tradicional documentado</span>
         </div>
+      </div>
+
+      <div class="buscador-remedios">
+        <input id="filtro-remedios-texto" type="text" autocomplete="off"
+          placeholder="Buscar remedio o síntoma: tos, náusea, presión, dormir, colesterol…">
       </div>
 
       <div class="ejemplos filtro-remedios">
@@ -131,7 +208,7 @@
 
     <section id="inicio">
       <div class="card intro">
-        <h3>Base de conocimiento — Hipertensión arterial sistémica</h3>
+        <h3>Base de conocimiento — fuentes oficiales indexadas</h3>
         <p>Esta demo responde <strong>solo</strong> con fragmentos de documentos oficiales.
         Cada afirmación enlaza a su fuente y página.</p>
         <ul id="doclist"></ul>
@@ -150,8 +227,9 @@
   </main>
 
   <footer>
-    <p>Fuentes: CENETEC · IMSS · Secretaría de Salud (NOM-030-SSA2-2009) · gob.mx.
-    Índice generado el 2026-09-15 (v0.4 — 1,897 fragmentos, 12 fuentes, 4 padecimientos). Las guías clínicas se actualizan periódicamente.</p>
+    <p>Fuentes: CENETEC · IMSS · Secretaría de Salud (NOM) · gob.mx.
+    Índice v2.1 generado el 2026-09-15 (4,441 fragmentos, 29 fuentes oficiales, 16 padecimientos).
+    Las guías clínicas se actualizan periódicamente.</p>
     <p>Sección 🌿 Remedios caseros: Cochrane Library · NCCIH/NIH · ACG · FDA · meta-análisis
     publicados · Biblioteca Digital de la Medicina Tradicional Mexicana (UNAM/INI).</p>
   </footer>

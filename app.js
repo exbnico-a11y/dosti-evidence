@@ -67,6 +67,7 @@ function buscar(query, k = 10, tema = "todos") {
   if (!resolved.length) return [];
 
   const scores = new Map();
+  const BOOST = { recomendacion: 1.5, farmacos: 1.5, algoritmo: 1.5, evidencia: 0.7 };
   for (const { t, w } of resolved) {
     const idf = IDX.idf[t];
     const post = IDX.postings[t];
@@ -75,7 +76,8 @@ function buscar(query, k = 10, tema = "todos") {
       const tf = post[cid];
       const dl = IDX.dls[cid];
       const bm = idf * (tf * (K1 + 1)) / (tf + K1 * (1 - B + B * dl / avgdl));
-      scores.set(+cid, (scores.get(+cid) || 0) + bm * w);
+      const tag = IDX.chunks[cid][3] || "otro";
+      scores.set(+cid, (scores.get(+cid) || 0) + bm * w * (BOOST[tag] || 1));
     }
   }
   const ranked = [...scores.entries()].sort((a, b) => b[1] - a[1]);
@@ -98,6 +100,24 @@ function buscar(query, k = 10, tema = "todos") {
   return sel;
 }
 
+/* ---------- clasificador de intención (P1-2) ---------- */
+
+const INTENCION_PATRONES = [
+  ["dosis", /dosis|\bmg\b|presentaci|contraindicaci/],
+  ["tratamiento", /tratamiento|manejo|inicial|fármaco|farmaco|medicamento|primera l/i],
+  ["diagnostico", /diagnóstico|diagnosticar|criterios|clasificación|clasificacion|cifras/],
+  ["meta", /\bmeta\b|objetivo/],
+  ["referencia", /referir|referencia|segundo nivel|especialista/],
+];
+
+function clasificarIntencion(query) {
+  const q = " " + norm(query.toLowerCase()) + " ";
+  for (const [intencion, pat] of INTENCION_PATRONES) {
+    if (pat.test(q)) return intencion;
+  }
+  return "general";
+}
+
 /* ---------- síntesis extractiva (MMR) ---------- */
 
 function oraciones(texto) {
@@ -112,9 +132,30 @@ function simJaccard(a, b) {
   return A.size + B.size ? inter / (A.size + B.size - inter) : 0;
 }
 
-function puntuarOracion(s, termSet) {
+/* P0-4: narrativa de estudio (diseño/muestra/estadísticos). No accionable. */
+const PATRONES_EVIDENCIA = [
+  /se realizó|se llevaron a cabo|se condujo|se incluyeron|se analizaron/i,
+  /estudio de corte|ensayo cl[ií]nico|cohorte|casos y controles|revisi[oó]n sistem[aá]tica|metaan[aá]lisis|meta-an[aá]lisis/i,
+  /los resultados (mostraron|demostraron|sugieren)|se encontró|se observó|se reportó una (mayor|menor|incidencia|prevalencia)/i,
+  /\b(OR|RR|HR)\s*=|IC\s?95|intervalo de confianza|p\s?<\s?0\./,
+  /participantes|poblaci[oó]n de estudio|tamaño de la muestra/i,
+];
+/* Una recomendación que cita evidencia sigue siendo accionable (excepción P0-4) */
+const VERBO_ACCION_P0_4 = /recomiend|sugier|debe|no usar|evitar/i;
+
+/* P0-2: verbos de acción clínica ampliados (condición de entrada) */
+const VERBO_ACCION = /recomiend|sugier|debe|iniciar|administrar|mantener|suspender|referir|diagnosticar|clasificar|medir|confirmar|ajustar|combinar|contraindic|indicar/i;
+const MARCADORES_GRADE = /recomendaci[oó]n (fuerte|d[eé]bil)|a favor|en contra|calidad de la evidencia (alta|moderada|baja)/i;
+
+function puntuarOracion(s, termSet, intencion = "general") {
   const toks = tokenize(s);
   if (toks.length < 4 || s.length < 40) return -1;
+  // artefactos de tabla mal extraída ("cuadro 1) , cuadro 1)… Evidencia / Recomendación")
+  const letras = (s.match(/[a-záéíóúñü]/gi) || []).length;
+  if (letras / s.length < 0.45) return -1;
+  if (/evidencia\s*\/\s*recomendaci/i.test(s)) return -1;
+  // P0-4: excluir narrativa metodológica en todas las consultas…
+  if (PATRONES_EVIDENCIA.some(p => p.test(s)) && !VERBO_ACCION_P0_4.test(s)) return -1;
   let s_ = 0, hits = 0;
   for (const t of toks) {
     const idf = IDX.idf[t];
@@ -122,30 +163,112 @@ function puntuarOracion(s, termSet) {
     if (termSet.has(t)) hits++;
   }
   if (!hits) return -1;
+  // P0-2: en diagnóstico/tratamiento, la oración debe ser accionable…
+  if ((intencion === "diagnostico" || intencion === "tratamiento") &&
+      !/\d/.test(s) && !VERBO_ACCION.test(s)) return -1;
   let bonus = 0;
   if (/\d/.test(s)) bonus += 0.6;
-  if (/recomiend|sugier|debe|iniciar|administrar|mantener|suspender|referir/i.test(s)) bonus += 0.8;
+  if (VERBO_ACCION.test(s)) bonus += 0.8;
+  if (MARCADORES_GRADE.test(s)) bonus += 1.0;
   return (s_ * (1 + hits / termSet.size) + bonus * hits) / Math.sqrt(toks.length);
 }
 
-function sintetizar(resultados, query, maxOraciones = 8) {
+/* P1-1: bloques funcionales por intención (qué debe aparecer, no formato rígido) */
+const BLOQUES_INTENCION = {
+  diagnostico: [
+    ["criterio", /diagn|criteri|sospecha|s[ií]ntoma|signo|confirma|tamizaje|medici/i, 2],
+    ["clasificacion", /grado|estadio|fase|leve|moderad|grave|clasificaci/i, 2],
+  ],
+  tratamiento: [
+    ["primera_linea", /inici|primera|tratamiento|f[aá]rmaco|monoterapia|combinaci|administrar|dosis/i, 2],
+    ["meta", /\bmeta\b|objetivo|cifra|control/i, 1],
+    ["referencia", /referir|segundo nivel|especialidad|contrarreferencia|urgencia/i, 1],
+  ],
+  dosis: [
+    ["dosis", /dosis|\bmg\b|administraci/i, 2],
+    ["presentacion", /presentaci|tableta|comprimido|c[aá]psula|ampolleta|frasco|envase/i, 1],
+    ["contraindicacion", /contraindic|precauc|no usar|evitar|suspend/i, 1],
+  ],
+  meta: [
+    ["cifra_objetivo", /\bmeta\b|objetivo|control/i, 2],
+    ["condiciones", /excepto|siempre que|individualiz|ajust|embarazo|renal|hep[aá]tic/i, 2],
+  ],
+};
+const ETIQUETA_BLOQUE = {
+  criterio: "Criterios", clasificacion: "Clasificación",
+  primera_linea: "Tratamiento", meta: "Meta terapéutica", referencia: "Referencia",
+  dosis: "Dosis", presentacion: "Presentación", contraindicacion: "Contraindicaciones",
+  cifra_objetivo: "Cifra objetivo", condiciones: "Condiciones",
+};
+
+function asignarBloque(s, intencion) {
+  for (const [id, pat] of BLOQUES_INTENCION[intencion] || []) {
+    if (pat.test(s)) return id;
+  }
+  return null;
+}
+
+function sintetizar(resultados, query, maxOraciones = 4) {
+  const intencion = clasificarIntencion(query);
   const termSet = new Set(tokenize(query));
-  const candidatas = [];
+  const accionables = [], deEvidencia = [];
   resultados.forEach(([cid], ci) => {
+    const tag = IDX.chunks[cid][3] || "otro";
     for (const s of oraciones(IDX.chunks[cid][2])) {
-      const p = puntuarOracion(s, termSet);
-      if (p > 0) candidatas.push({ s: s.trim(), p, ref: ci, cid });
+      const p = puntuarOracion(s, termSet, intencion);
+      if (p > 0) {
+        const item = { s: s.trim(), p, ref: ci, cid, tag };
+        (tag === "evidencia" ? deEvidencia : accionables).push(item);
+      }
     }
   });
-  candidatas.sort((a, b) => b.p - a.p);
+  // P1-3.4: solo se recurre a oraciones de evidencia si no hay suficientes
+  if (accionables.length < maxOraciones) {
+    deEvidencia.sort((a, b) => b.p - a.p);
+    accionables.push(...deEvidencia.slice(0, maxOraciones - accionables.length));
+  }
+  accionables.sort((a, b) => b.p - a.p);
+
   const elegidas = [], usados = [];
-  for (const c of candidatas) {
-    if (elegidas.length >= maxOraciones) break;
-    if (c.s.length > 420) continue;
+  const usar = c => {
+    if (elegidas.length >= maxOraciones) return false;
+    if (c.s.length > 420) return false;
     const toks = tokenize(c.s);
-    if (usados.some(u => simJaccard(u, toks) > 0.45)) continue;
-    elegidas.push(c);
-    usados.push(toks);
+    if (usados.some(u => simJaccard(u, toks) > 0.45)) return false;
+    elegidas.push(c); usados.push(toks);
+    return true;
+  };
+  // selección por bloques funcionales (P1-1): cada bloque con cupo propio
+  const bloqueDe = new Map();
+  for (const [id, , cupo] of BLOQUES_INTENCION[intencion] || []) {
+    let n = 0;
+    for (const c of accionables) {
+      if (n >= cupo || elegidas.length >= maxOraciones) break;
+      if (asignarBloque(c.s, intencion) === id && usar(c)) { n++; bloqueDe.set(c, id); }
+    }
+  }
+  for (const c of accionables) {           // relleno global dentro del límite
+    if (elegidas.length >= maxOraciones) break;
+    usar(c);
+  }
+  elegidas.sort((a, b) => b.p - a.p);      // orden clínico: las más puntuadas primero
+  elegidas.forEach(c => { if (!bloqueDe.has(c)) bloqueDe.set(c, asignarBloque(c.s, intencion)); });
+  elegidas.bloqueDe = bloqueDe;
+  elegidas.intencion = intencion;
+
+  // P2-2: oraciones de referencia siempre disponibles en tratamiento o referencia
+  if (intencion === "tratamiento" || intencion === "referencia") {
+    const refs = [];
+    for (const [cid] of resultados) {
+      for (const s of oraciones(IDX.chunks[cid][2])) {
+        if (/referir|referencia|segundo nivel/i.test(s) && /segundo nivel|referencia|especialidad|urgencia/i.test(s)
+            && s.length < 420 && !refs.some(r => r.s === s)) {
+          refs.push({ s: s.trim(), cid });
+        }
+      }
+      if (refs.length >= 4) break;
+    }
+    elegidas.referir = refs.slice(0, 3);
   }
   return elegidas;
 }
@@ -177,16 +300,45 @@ function render(resultados, query) {
   }
 
   const sintesis = sintetizar(resultados, query);
+  const intencion = sintesis.intencion || "general";
+
+  // P2-1: ¿hay ≥3 oraciones con la misma unidad de magnitud? → tabla
+  const UNIDADES = /(\d[\d.,]*\s?(?:mm\s?hg|mg\/dl|g\/l|kg\/m2|kg\/m²|ml\/min|bpm|mg\/d[ií]a|g\/d[ií]a))/i;
+  const conUnidad = sintesis.filter(o => UNIDADES.test(o.s));
+  const unidadComun = (intencion === "diagnostico" || intencion === "meta") &&
+    conUnidad.length >= 3 ? UNIDADES.exec(conUnidad[0].s)[1].replace(/[\d.,\s]+/, "") : null;
+
+  const pintarOracion = o =>
+    `${o.s} <span class="cite" data-c="${o.ref}">[${o.ref + 1}]</span>`;
 
   let html = `<h3>Respuesta basada en guías oficiales</h3>`;
   if (sintesis.length) {
     html += `<div class="sintesis">`;
-    for (let i = 0; i < sintesis.length; i += 3) {
-      html += "<p>" + sintesis.slice(i, i + 3).map(o =>
-        `${o.s} <span class="cite" data-c="${o.ref}">[${o.ref + 1}]</span>`
-      ).join(" ") + "</p>";
+    const vistos = new Set();
+    if (unidadComun) {
+      // tabla concepto · valor: divide en el primer número
+      html += `<table class="tabla-cifras"><thead><tr><th>Concepto</th><th>Valor</th></tr></thead><tbody>`;
+      for (const o of sintesis) {
+        if (!UNIDADES.test(o.s)) continue;
+        const m = /^(.*?)(\d[\d.,]*(?:\.\d+)?\s?(?:mm\s?hg|mg\/dl|g\/l|kg\/m2|kg\/m²|ml\/min|bpm|mg\/d[ií]a|g\/d[ií]a)[^.]*)/i.exec(o.s);
+        if (m && m[1].trim().length >= 8) {
+          vistos.add(o);
+          html += `<tr><td>${m[1].trim()}</td><td>${m[2].trim()} <span class="cite" data-c="${o.ref}">[${o.ref + 1}]</span></td></tr>`;
+        }
+      }
+      html += `</tbody></table>`;
+      const resto = sintesis.filter(o => !vistos.has(o));
+      if (resto.length) html += `<p>${resto.map(pintarOracion).join(" ")}</p>`;
+    } else {
+      html += `<p>${sintesis.map(pintarOracion).join(" ")}</p>`;
     }
     html += `</div>`;
+  }
+  if (sintesis.referir && sintesis.referir.length) {
+    html += `<div class="referir"><strong>📤 Cuándo referir a segundo nivel</strong><ul>` +
+      sintesis.referir.map(o =>
+        `<li>${o.s} <span class="cite" data-c="${resultados.findIndex(r => r[0] === o.cid)}">[${resultados.findIndex(r => r[0] === o.cid) + 1}]</span></li>`).join("") +
+      `</ul></div>`;
   }
   html += `<details class="fragmentos"><summary>Ver fragmentos completos de las fuentes</summary>`;
   resultados.forEach(([cid], i) => {
@@ -200,19 +352,29 @@ function render(resultados, query) {
     fuentes oficiales citadas. Verifica siempre el contexto completo en la página indicada.</p>`;
   box.innerHTML = html;
 
+  // P0-3: fuentes colapsadas por defecto; clic expande nombre completo + fragmento
   fuentes.innerHTML = resultados.map(([cid], i) => {
     const info = chunkInfo(cid);
     const snip = limpiar(info.texto).slice(0, 260);
-    return `<div class="fuente" id="f${i}">
+    return `<div class="fuente" id="f${i}" data-i="${i}" role="button" tabindex="0">
       <span class="n">[${i + 1}]</span><span class="doc">${info.docCorto}</span>
-      <div class="pag">${info.docNombre} · página ${info.pagina}</div>
-      <div class="snip">${snip}…</div></div>`;
+      <span class="pag">· página ${info.pagina}</span>
+      <div class="fuente-extra"><div class="pag">${info.docNombre}</div>
+      <div class="snip">${snip}…</div></div></div>`;
   }).join("");
+  fuentes.querySelectorAll(".fuente").forEach(f => {
+    const toggle = () => f.classList.toggle("abierta");
+    f.addEventListener("click", toggle);
+    f.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); toggle(); } });
+  });
 
   box.querySelectorAll(".cite").forEach(el =>
     el.addEventListener("click", () => {
       const f = document.getElementById("f" + el.dataset.c);
-      if (f) f.scrollIntoView({ behavior: "smooth", block: "center" });
+      if (f) {
+        f.classList.add("abierta");
+        f.scrollIntoView({ behavior: "smooth", block: "center" });
+      }
     }));
 }
 
@@ -587,9 +749,21 @@ const REMEDIOS = [
 
 function initRemedios() {
   const lista = document.getElementById("lista-remedios");
-  const pintar = cat => {
-    const sel = REMEDIOS.filter(r => cat === "todas" || r.categoria === cat);
-    lista.innerHTML = sel.map(r => `
+  const inputTexto = document.getElementById("filtro-remedios-texto");
+  let catActual = "todas";
+
+  const normT = s => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+
+  const pintar = () => {
+    const q = normT(inputTexto.value.trim());
+    const sel = REMEDIOS.filter(r => {
+      if (catActual !== "todas" && r.categoria !== catActual) return false;
+      if (!q) return true;
+      const palabras = normT([r.nombre, r.uso, r.preparacion, r.evidenciaNota,
+        r.seguridad.join(" ")].join(" ")).split(/[^a-z0-9]+/);
+      return q.split(/\s+/).every(t => palabras.some(w => w.startsWith(t)));
+    });
+    lista.innerHTML = sel.length ? sel.map(r => `
       <div class="card remedio">
         <div class="remedio-head">
           <span class="remedio-icono">${r.icono}</span>
@@ -606,14 +780,20 @@ function initRemedios() {
         <div class="remedio-fuentes">
           ${r.fuentes.map(f => `<a href="${f.url}" target="_blank" rel="noopener">${f.nombre} ↗</a>`).join("")}
         </div>
-      </div>`).join("");
+      </div>`).join("")
+      : `<p class="sin-resultados" style="grid-column:1/-1">Sin remedios que coincidan
+        con la búsqueda. Prueba con otro síntoma (tos, náusea, presión, dormir…)
+        o revisa la categoría seleccionada.</p>`;
   };
-  pintar("todas");
+
+  pintar();
+  inputTexto.addEventListener("input", pintar);
   document.querySelectorAll(".filtro-remedios .chip-tema").forEach(ch =>
     ch.addEventListener("click", () => {
+      catActual = ch.dataset.cat;
       document.querySelectorAll(".filtro-remedios .chip-tema").forEach(c =>
         c.classList.toggle("activo", c === ch));
-      pintar(ch.dataset.cat);
+      pintar();
     }));
 }
 
@@ -628,6 +808,7 @@ function initTabs() {
       const hayResultados = !!document.getElementById("resultados").dataset.mostrado;
       document.getElementById("hero").hidden = vista !== "buscador";
       document.getElementById("remedios").hidden = vista !== "remedios";
+      document.getElementById("algoritmo").hidden = vista !== "algoritmo";
       document.getElementById("resultados").hidden = vista !== "buscador" || !hayResultados;
       document.getElementById("inicio").hidden = vista !== "buscador" || hayResultados;
       window.scrollTo({ top: 0, behavior: "smooth" });
