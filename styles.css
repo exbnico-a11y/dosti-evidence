@@ -180,6 +180,18 @@ footer {
 }
 .chip-tema:hover { border-color: var(--teal); }
 .chip-tema.activo { background: var(--teal); color: #fff; border-color: var(--teal); }
+
+/* --- selector de algoritmos clínicos --- */
+.alg-selector { margin: 10px 0 16px; }
+.chip-alg {
+  margin: 4px 3px; padding: 6px 14px; font-size: 13px; font-weight: 600;
+  background: var(--card); border: 1px solid var(--border);
+  border-radius: 16px; cursor: pointer; color: var(--muted);
+}
+.chip-alg:hover { border-color: var(--teal); }
+.chip-alg.activo { background: var(--teal); color: #fff; border-color: var(--teal); }
+.alg[hidden] { display: none; }
+.alg-titulo { margin: 18px 0 10px; font-size: 17px; color: var(--teal-dark); }
 .tema-grupo { margin-bottom: 10px; }
 .tema-grupo > strong { color: var(--teal-dark); font-size: 14px; }
 .tema-grupo ul { margin: 4px 0 0 16px; }

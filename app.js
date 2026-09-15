@@ -649,7 +649,7 @@ const REMEDIOS = [
       { nombre: "Atlas de las Plantas de la Medicina Tradicional Mexicana (UNAM/INI)", url: "http://www.medicinatradicionalmexicana.unam.mx/" }
     ],
     enlaces: [
-      { texto: "🫀 Ver algoritmo clínico HTA", vista: "algoritmo" },
+      { texto: "🗺️ Ver algoritmos clínicos (16 padecimientos)", vista: "algoritmo" },
       { texto: "🔎 Guías oficiales: tratamiento de la HAS", vista: "buscador",
         q: "tratamiento farmacológico inicial hipertensión", tema: "hipertension" }
     ]
@@ -670,7 +670,7 @@ const REMEDIOS = [
       { nombre: "Meta-análisis Ried 2020 — PMC", url: "https://pmc.ncbi.nlm.nih.gov/articles/PMC6966103/" }
     ],
     enlaces: [
-      { texto: "🫀 Ver algoritmo clínico HTA", vista: "algoritmo" },
+      { texto: "🗺️ Ver algoritmos clínicos (16 padecimientos)", vista: "algoritmo" },
       { texto: "🔎 Guías oficiales: metas de presión arterial", vista: "buscador",
         q: "meta de presión arterial según riesgo cardiovascular", tema: "hipertension" }
     ]
@@ -1077,6 +1077,23 @@ function initTabs() {
 
 /* ---------- arranque ---------- */
 
+/* ---------- selector de algoritmos clínicos ---------- */
+function initAlgoritmos() {
+  const chips = [...document.querySelectorAll(".chip-alg")];
+  const algs = [...document.querySelectorAll("#algoritmo .alg")];
+  if (!chips.length || !algs.length) return;
+
+  const mostrar = algId => {
+    chips.forEach(c => c.classList.toggle("activo", c.dataset.alg === algId));
+    algs.forEach(a => { a.hidden = a.dataset.alg !== algId; });
+    const alg = algs.find(a => a.dataset.alg === algId);
+    if (alg) alg.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
+  chips.forEach(c => c.addEventListener("click", () => mostrar(c.dataset.alg)));
+  mostrar("hipertension");
+}
+
 async function init() {
   const res = await fetch("index.json");
   IDX = await res.json();
@@ -1104,6 +1121,7 @@ async function init() {
   initModalIA();
   initFarmacos();
   initRemedios();
+  initAlgoritmos();
   initTabs();
 
   const run = q => {

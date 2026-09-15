@@ -26,7 +26,7 @@
 
   <nav class="tabs">
     <button class="tab activo" data-vista="buscador">🔎 Buscador de evidencia</button>
-    <button class="tab" data-vista="algoritmo">🫀 Algoritmo HTA</button>
+    <button class="tab" data-vista="algoritmo">🗺️ Algoritmos clínicos</button>
     <button class="tab" data-vista="remedios">🌿 Remedios caseros con evidencia</button>
   </nav>
 
@@ -81,12 +81,33 @@
 
     <section id="algoritmo" hidden>
       <div class="card intro">
-        <h3>🫀 Algoritmo clínico — Hipertensión arterial (primer nivel)</h3>
-        <p>Secuencia decisión → acción según la GPC-IMSS-076 (Referencia Rápida,
-        Cuadros II–IV y diagramas de flujo) y la GPC-IMSS-076-21. Es una síntesis
-        de consulta: la fuente completa manda.</p>
+        <h3>🗺️ Algoritmos clínicos — primer nivel</h3>
+        <p>Secuencias decisión → acción construidas a partir de las GPC indexadas
+        (CENETEC/IMSS) y sus diagramas de flujo. Elige el padecimiento; cada paso
+        cita la guía fuente. Son síntesis de consulta: la fuente completa manda.</p>
       </div>
 
+      <div class="alg-selector" role="tablist" aria-label="Selector de padecimiento">
+        <button class="chip-alg activo" data-alg="hipertension">Hipertensión</button>
+        <button class="chip-alg" data-alg="diabetes">Diabetes</button>
+        <button class="chip-alg" data-alg="dislipidemias">Dislipidemias</button>
+        <button class="chip-alg" data-alg="obesidad">Obesidad</button>
+        <button class="chip-alg" data-alg="asma">Asma</button>
+        <button class="chip-alg" data-alg="epoc">EPOC</button>
+        <button class="chip-alg" data-alg="neumonia">Neumonía</button>
+        <button class="chip-alg" data-alg="erc">Enf. renal crónica</button>
+        <button class="chip-alg" data-alg="depresion">Depresión</button>
+        <button class="chip-alg" data-alg="ansiedad">Ansiedad</button>
+        <button class="chip-alg" data-alg="hipotiroidismo">Hipotiroidismo</button>
+        <button class="chip-alg" data-alg="cefalea">Cefalea/Migraña</button>
+        <button class="chip-alg" data-alg="anemia">Anemia</button>
+        <button class="chip-alg" data-alg="ivu">IVU</button>
+        <button class="chip-alg" data-alg="artritis">Artritis reumatoide</button>
+        <button class="chip-alg" data-alg="osteoporosis">Osteoporosis</button>
+      </div>
+
+      <div class="alg" data-alg="hipertension">
+      <h3 class="alg-titulo">🫀 Hipertensión arterial</h3>
       <ol class="flow">
         <li class="paso">
           <h4>1 · Medir y confirmar el diagnóstico</h4>
@@ -148,6 +169,626 @@
       <p class="nota algoritmo-fuente">Fuente: GPC-IMSS-076-08 Referencia Rápida
       (actualización 2014) y GPC-IMSS-076-21 (Evidencias y Recomendaciones, 2021).
       Simplificación para consulta; no sustituye la guía completa.</p>
+      </div>
+
+      <div class="alg" data-alg="diabetes" hidden>
+      <h3 class="alg-titulo">🩸 Diabetes mellitus tipo 2</h3>
+      <ol class="flow">
+        <li class="paso">
+          <h4>1 · Tamizaje</h4>
+          <p>Escala FINDRISC en ≥ 40 años o con factores de riesgo (sobrepeso,
+          antecedente familiar, HTA, sedentarismo). Un puntaje alto justifica
+          estudios de confirmación.</p>
+        </li>
+        <li class="paso">
+          <h4>2 · Confirmar el diagnóstico</h4>
+          <p>HbA1c es el estudio preferido para confirmar (especificidad 0.956
+          frente a glucosa plasmática; guía GPC-718-18). Si la cifra es
+          discordante con la clínica, confirmar con otra prueba.</p>
+        </li>
+        <li class="paso">
+          <h4>3 · Iniciar tratamiento</h4>
+          <p>Medidas de estilo de vida en todos + <strong>metformina</strong> como
+          monoterapia de inicio. Definir la meta de control con la GPC según
+          perfil del paciente (metas individualizadas).</p>
+        </li>
+        <li class="paso bifurca">
+          <h4>4 · ¿Meta lograda y mantenida?</h4>
+          <div class="ramas">
+            <div class="rama"><strong>Sí</strong>Continuar metformina + estilo de vida; vigilancia periódica.</div>
+            <div class="rama"><strong>No</strong>Añadir un segundo fármaco: sulfonilurea de bajo riesgo de hipoglucemia (glimepirida, gliclazida) cuando DPP-4/SGLT-2 no están disponibles; como tercera línea, valorar agonista GLP-1.</div>
+          </div>
+        </li>
+        <li class="paso">
+          <h4>5 · Advertencias de seguridad</h4>
+          <p>Insulina aumenta al doble el riesgo de hipoglucemia severa frente a
+          no insulínicos. Tiazolidinedionas: riesgo de falla cardiaca, fracturas
+          y cáncer de vejiga. iSGLT-2: infecciones urogenitales.</p>
+        </li>
+        <li class="paso referencia">
+          <h4>6 · Referir a segundo nivel si</h4>
+          <p>Sospecha de DM tipo 1 o LADA; embarazo; complicaciones (retinopatía,
+          nefropatía, pie diabético); descontrol persistente a pesar de
+          tratamiento optimizado.</p>
+        </li>
+      </ol>
+      <p class="nota algoritmo-fuente">Fuente: GPC-IMSS-718-18, Diagnóstico y
+      Tratamiento Farmacológico de la Diabetes Mellitus 2. Simplificación para
+      consulta; no sustituye la guía completa.</p>
+      </div>
+
+      <div class="alg" data-alg="dislipidemias" hidden>
+      <h3 class="alg-titulo">🧈 Dislipidemias</h3>
+      <ol class="flow">
+        <li class="paso">
+          <h4>1 · Perfil lipídico y estratificación</h4>
+          <p>Perfil completo + estratificación de riesgo cardiovascular según
+          factores y comorbilidades (DM, ERC, tabaquismo, edad).</p>
+        </li>
+        <li class="paso bifurca">
+          <h4>2 · Meta de LDL-C según riesgo (GPC-233-22)</h4>
+          <div class="ramas">
+            <div class="rama"><strong>Bajo</strong>LDL ≤ 116 mg/dL</div>
+            <div class="rama"><strong>Moderado</strong>LDL ≤ 100 mg/dL</div>
+            <div class="rama"><strong>Alto</strong>LDL ≤ 70 mg/dL</div>
+            <div class="rama"><strong>Muy alto</strong>LDL &lt; 55 mg/dL</div>
+          </div>
+        </li>
+        <li class="paso">
+          <h4>3 · Estatina según intensidad necesaria</h4>
+          <p><strong>Alta intensidad</strong> (reduce &gt; 50 % del LDL basal) o
+          <strong>moderada</strong> (30–50 %), según la meta del paso 2.</p>
+        </li>
+        <li class="paso bifurca">
+          <h4>4 · ¿Meta alcanzada tras 2 meses?</h4>
+          <div class="ramas">
+            <div class="rama"><strong>Sí</strong>Mantener; control cada 6 meses.</div>
+            <div class="rama"><strong>No</strong>Agregar ezetimibe y revaluar respuesta.</div>
+          </div>
+        </li>
+        <li class="paso">
+          <h4>5 · ¿Sigue sin meta con estatina + ezetimibe?</h4>
+          <p>Valorar inhibidores de PCSK9 (evolocumab) — corresponde a segundo
+          nivel / valoración especializada.</p>
+        </li>
+        <li class="paso referencia">
+          <h4>6 · Referir a segundo nivel si</h4>
+          <p>Riesgo muy alto (p. ej. dislipidemia familiar) sin meta a pesar de
+          terapia combinada → valoración multidisciplinaria; intolerancia a
+          estatinas; dislipidemia secundaria no resuelta.</p>
+        </li>
+      </ol>
+      <p class="nota algoritmo-fuente">Fuente: GPC-IMSS-233-22, Diagnóstico y
+      Tratamiento de las Dislipidemias. Simplificación para consulta; no
+      sustituye la guía completa.</p>
+      </div>
+
+      <div class="alg" data-alg="obesidad" hidden>
+      <h3 class="alg-titulo">⚖️ Obesidad</h3>
+      <ol class="flow">
+        <li class="paso">
+          <h4>1 · Evaluación inicial</h4>
+          <p>IMC + perímetro abdominal (&gt; 88 cm mujer / &gt; 102 cm hombre como
+          criterio adicional) + comorbilidades asociadas (DM, HTA, dislipidemia,
+          apnea).</p>
+        </li>
+        <li class="paso">
+          <h4>2 · Tratamiento conductual en todos</h4>
+          <p>Intervención intensiva en estilo de vida: dieta, actividad física y
+          modificación de conducta (GPC-046-18). Apoyo por medios alternos
+          (internet / teléfono) como coadyuvante.</p>
+        </li>
+        <li class="paso bifurca">
+          <h4>3 · ¿IMC &gt; 30, o &gt; 27 con comorbilidad?</h4>
+          <div class="ramas">
+            <div class="rama"><strong>Sí</strong>Añadir farmacoterapia como coadyuvante al plan de estilo de vida.</div>
+            <div class="rama"><strong>No</strong>Continuar medidas conductuales y vigilancia.</div>
+          </div>
+        </li>
+        <li class="paso bifurca">
+          <h4>4 · ¿IMC &gt; 40, o &gt; 35 con comorbilidad?</h4>
+          <div class="ramas">
+            <div class="rama"><strong>Sí</strong>Referencia a segundo nivel para valoración de cirugía bariátrica.</div>
+            <div class="rama"><strong>No</strong>Seguir manejo en primer nivel.</div>
+          </div>
+        </li>
+        <li class="paso">
+          <h4>5 · Meta y revaluación</h4>
+          <p>Meta: pérdida &gt; 5 % del peso con mejoría en objetivos clínicos →
+          mantenimiento. Si no se logra en el plazo acordado: intensificar el
+          tratamiento.</p>
+        </li>
+      </ol>
+      <p class="nota algoritmo-fuente">Fuente: GPC-IMSS-046-18, Diagnóstico y
+      Tratamiento de la Obesidad. Simplificación para consulta; no sustituye la
+      guía completa.</p>
+      </div>
+
+      <div class="alg" data-alg="asma" hidden>
+      <h3 class="alg-titulo">🫁 Asma — exacerbación aguda</h3>
+      <ol class="flow">
+        <li class="paso">
+          <h4>1 · Valoración inicial</h4>
+          <p>Interrogatorio y exploración; PEF o FEV1, saturación de O2;
+          gasometría si la exacerbación es grave; radiografía solo si se
+          sospecha complicación (neumotórax, neumonía).</p>
+        </li>
+        <li class="paso">
+          <h4>2 · Tratamiento inicial</h4>
+          <p>Oxígeno para lograr satO2 ≥ 90 % (≥ 95 % en niños) + broncodilatador
+          β2 de acción rápida inhalado (GPC asma CENETEC/IMSS).</p>
+        </li>
+        <li class="paso bifurca">
+          <h4>3 · ¿Mejoría tras broncodilatador?</h4>
+          <div class="ramas">
+            <div class="rama"><strong>Sí</strong>Continuar β2 de acción rápida según respuesta; valorar glucocorticoide sistémico.</div>
+            <div class="rama"><strong>No</strong>Añadir anticolinérgico inhalado + glucocorticoide sistémico ± sulfato de magnesio IV.</div>
+          </div>
+        </li>
+        <li class="paso">
+          <h4>4 · Revaluar a 1–2 horas</h4>
+          <p>Pobre respuesta (PEF &lt; 60 % del previsto) o factores de riesgo de
+          asma casi fatal → considerar unidad de cuidados intensivos.</p>
+        </li>
+        <li class="paso bifurca">
+          <h4>5 · ¿Respuesta incompleta a 6–12 h?</h4>
+          <div class="ramas">
+            <div class="rama"><strong>Sí</strong>Admisión hospitalaria.</div>
+            <div class="rama"><strong>No</strong>Alta con plan de acción escrito y control cercano.</div>
+          </div>
+        </li>
+        <li class="paso referencia">
+          <h4>6 · Referir a tercer nivel si</h4>
+          <p>Casos graves, exacerbaciones repetidas, dificultad para el control en
+          primer nivel.</p>
+        </li>
+      </ol>
+      <p class="nota algoritmo-fuente">Fuente: GPC-IMSS-806-17, Diagnóstico y
+      Tratamiento de la Exacerbación Aguda del Asma Bronquial. Simplificación
+      para consulta; no sustituye la guía completa.</p>
+      </div>
+
+      <div class="alg" data-alg="epoc" hidden>
+      <h3 class="alg-titulo">🚬 EPOC</h3>
+      <ol class="flow">
+        <li class="paso">
+          <h4>1 · Detectar factores de riesgo</h4>
+          <p>Tabaquismo, humo de leña/carbón, exposición laboral a polvos o
+          humos, edad ≥ 40 años (GPC-037-08).</p>
+        </li>
+        <li class="paso">
+          <h4>2 · Confirmar con espirometría</h4>
+          <p>Espirometría con broncodilatador (obstrucción post-BD); según
+          disponibilidad: pletismografía, gasometría, pulsioximetría.</p>
+        </li>
+        <li class="paso">
+          <h4>3 · Estadificación</h4>
+          <p>Estratificar en 2º nivel (estadios I–IV); el médico de primer nivel
+          continúa la vigilancia y el tratamiento de base.</p>
+        </li>
+        <li class="paso">
+          <h4>4 · Medidas en todos los estadios</h4>
+          <p>Suspensión de tabaco con apoyo farmacológico si se requiere,
+          medidas higiénico-dietéticas, control de peso, rehabilitación
+          pulmonar, vacunación antigripal/neumocócica según esquema.</p>
+        </li>
+        <li class="paso referencia">
+          <h4>5 · Referir a segundo nivel si</h4>
+          <p>Estadificación inicial, exacerbaciones frecuentes, hipoxemia de
+          reposo, sospecha de diagnóstico alternativo o complicación.</p>
+        </li>
+      </ol>
+      <p class="nota algoritmo-fuente">Fuente: GPC-IMSS-037-08, Diagnóstico y
+      Tratamiento de la Enfermedad Pulmonar Obstructiva Crónica en el Adulto.
+      Simplificación para consulta; no sustituye la guía completa.</p>
+      </div>
+
+      <div class="alg" data-alg="neumonia" hidden>
+      <h3 class="alg-titulo">🌡️ Neumonía adquirida en la comunidad</h3>
+      <ol class="flow">
+        <li class="paso">
+          <h4>1 · Sospecha clínica</h4>
+          <p>Fiebre, tos, expectoración, disnea ± dolor torácico, consolidación a
+          la auscultación, leucocitosis — confirmar con <strong>infiltrado
+          pulmonar nuevo en radiografía</strong> (GPC-234-09).</p>
+        </li>
+        <li class="paso">
+          <h4>2 · Estratificar severidad</h4>
+          <p>Usar CURB-65 o PSI para estimar riesgo de mortalidad y decidir el
+          sitio de tratamiento.</p>
+        </li>
+        <li class="paso bifurca">
+          <h4>3 · Decidir sitio de tratamiento</h4>
+          <div class="ramas">
+            <div class="rama"><strong>PSI clase I–II</strong>Tratamiento ambulatorio (salvo hipoxemia). Patógenos frecuentes: S. pneumoniae, M. pneumoniae, virus respiratorios.</div>
+            <div class="rama"><strong>PSI III–V o hipoxemia</strong>Tratamiento intrahospitalario; UCI si criterios de gravedad.</div>
+          </div>
+        </li>
+        <li class="paso">
+          <h4>4 · Antimicrobiano</h4>
+          <p>Seleccionar según el algoritmo de tratamiento de la guía (regimenes
+          con β-lactámico o macrólido, p. ej. azitromicina en bajo riesgo);
+          ajustar a cultivo y evolución clínica a 48–72 h.</p>
+        </li>
+        <li class="paso referencia">
+          <h4>5 · Referir a segundo nivel si</h4>
+          <p>PSI III–V, hipoxemia, signos de sepsis, empeoramiento a 48–72 h del
+          tratamiento, comorbilidad grave o dificultad para el manejo ambulatorio.</p>
+        </li>
+      </ol>
+      <p class="nota algoritmo-fuente">Fuente: GPC-IMSS-234-09, Diagnóstico y
+      Tratamiento de la Neumonía Adquirida en la Comunidad. Simplificación para
+      consulta; no sustituye la guía completa.</p>
+      </div>
+
+      <div class="alg" data-alg="erc" hidden>
+      <h3 class="alg-titulo">🫘 Enfermedad renal crónica</h3>
+      <ol class="flow">
+        <li class="paso">
+          <h4>1 · Definir la ERC</h4>
+          <p>TFG &lt; 60 mL/min/1.73 m² o marcadores de daño renal (albuminuria,
+          alteraciones estructurales) por ≥ 3 meses (GPC-335-19).</p>
+        </li>
+        <li class="paso">
+          <h4>2 · Estadificar</h4>
+          <p>Estadios por TFG y categoría de albuminuria; documentar la causa
+          probable.</p>
+        </li>
+        <li class="paso">
+          <h4>3 · Manejo de comorbilidades</h4>
+          <p>DM, HTA, proteinuria (IECA/ARA II cuando hay proteinuria: retrasan
+          el inicio de diálisis), dislipidemia y anemia.</p>
+        </li>
+        <li class="paso">
+          <h4>4 · Medidas de protección renal</h4>
+          <p>Ajustar dosis de fármacos por TFG, evitar nefrotoxinas (AINE,
+          contrastes), controlar factores de riesgo modificables (obesidad,
+          DM2, tabaquismo).</p>
+        </li>
+        <li class="paso referencia">
+          <h4>5 · Referir a nefrólogo según estadio</h4>
+          <p>Proteinuria significativa, caída rápida o sostenida de la TFG,
+          estadios avanzados, etiología no clara o complicaciones difíciles de
+          manejar en primer nivel.</p>
+        </li>
+      </ol>
+      <p class="nota algoritmo-fuente">Fuente: GPC-IMSS-335-19, Diagnóstico y
+      Tratamiento de la Enfermedad Renal Crónica. Simplificación para consulta;
+      no sustituye la guía completa.</p>
+      </div>
+
+      <div class="alg" data-alg="depresion" hidden>
+      <h3 class="alg-titulo">🧠 Depresión mayor</h3>
+      <ol class="flow">
+        <li class="paso">
+          <h4>1 · Tamizaje y entrevista clínica</h4>
+          <p>Las escalas complementan pero no sustituyen la entrevista clínica
+          estructurada (GPC-161-09).</p>
+        </li>
+        <li class="paso bifurca">
+          <h4>2 · Preguntar SIEMPRE por ideas de muerte o suicidio</h4>
+          <div class="ramas">
+            <div class="rama"><strong>Sí hay ideas</strong>Explorar plan, método y acceso a medios.</div>
+            <div class="rama"><strong>No</strong>Continuar evaluación del episodio.</div>
+          </div>
+        </li>
+        <li class="paso referencia">
+          <h4>3 · Riesgo suicida → URGENCIA / segundo nivel</h4>
+          <p>Valoración inmediata; no dejar solo al paciente si hay plan y
+          acceso a medios.</p>
+        </li>
+        <li class="paso">
+          <h4>4 · Tratamiento del episodio</h4>
+          <p>Psicoterapia y/o antidepresivo. Con comorbilidad o polifarmacia, 1ª
+          elección: <strong>sertralina o citalopram</strong> (menos
+          interacciones, mejor perfil en mayores).</p>
+        </li>
+        <li class="paso">
+          <h4>5 · Factores de mal pronóstico</h4>
+          <p>Intentos previos, comorbilidad médica, abuso de sustancias,
+          desesperanza intensa → considerar referencia desde el inicio.</p>
+        </li>
+        <li class="paso">
+          <h4>6 · Mantenimiento</h4>
+          <p>Episodio &gt; 1 año de duración o ≥ 2 episodios en 5 años →
+          tratamiento de mantenimiento; valorar TEC en refractariedad o riesgo
+          suicida (2º nivel).</p>
+        </li>
+      </ol>
+      <p class="nota algoritmo-fuente">Fuente: GPC-IMSS-161-09, Diagnóstico y
+      Tratamiento de los Trastornos Depresivos. Simplificación para consulta; no
+      sustituye la guía completa.</p>
+      </div>
+
+      <div class="alg" data-alg="ansiedad" hidden>
+      <h3 class="alg-titulo">😮‍💨 Trastornos de ansiedad</h3>
+      <ol class="flow">
+        <li class="paso">
+          <h4>1 · Identificar el cuadro</h4>
+          <p>TAG, crisis de pánico o fobia social; descartar causa médica o
+          fármaco (tiroides, estimulantes) (GPC-392-10).</p>
+        </li>
+        <li class="paso">
+          <h4>2 · Tratamiento base</h4>
+          <p>Psicoterapia (TCC) y antidepresivo según cuadro. En TAG, paroxetina
+          e imipramina muestran eficacia similar.</p>
+        </li>
+        <li class="paso">
+          <h4>3 · Crisis de pánico agudas</h4>
+          <p>Benzodiacepinas de acción corta (alprazolam, clonazepam,
+          lorazepam, diazepam) eficaces para el corto plazo; <strong>buspirona</strong>
+          si hay dependencia a BZD o de sustancias.</p>
+        </li>
+        <li class="paso">
+          <h4>4 · Qué evitar</h4>
+          <p>No usar neurolépticos ni betabloqueadores (propranolol) como
+          tratamiento del TAG o el pánico. Venlafaxina: evitarla con riesgo de
+          arritmia o IAM reciente; en hipertensos solo si está controlada.</p>
+        </li>
+        <li class="paso referencia">
+          <h4>5 · Referir a segundo nivel si</h4>
+          <p>Refractariedad al tratamiento, comorbilidad grave, riesgo de
+          dependencia a benzodiacepinas.</p>
+        </li>
+      </ol>
+      <p class="nota algoritmo-fuente">Fuente: GPC-IMSS-392-10, Diagnóstico y
+      Tratamiento de los Trastornos de Ansiedad. Simplificación para consulta;
+      no sustituye la guía completa.</p>
+      </div>
+
+      <div class="alg" data-alg="hipotiroidismo" hidden>
+      <h3 class="alg-titulo">🦋 Hipotiroidismo</h3>
+      <ol class="flow">
+        <li class="paso">
+          <h4>1 · Sospecha y laboratorio</h4>
+          <p>Síntomas sugerentes + TSH. anti-TPO / anti-Tg predicen progresión a
+          hipotiroidismo manifiesto (GPC-265-10).</p>
+        </li>
+        <li class="paso bifurca">
+          <h4>2 · Clasificar el subclínico</h4>
+          <div class="ramas">
+            <div class="rama"><strong>Leve</strong>TSH 4.5–10 mUI/L: observación periódica.</div>
+            <div class="rama"><strong>Severo</strong>TSH &gt; 10 mUI/L: considerar tratamiento.</div>
+          </div>
+        </li>
+        <li class="paso">
+          <h4>3 · Tratamiento de elección</h4>
+          <p><strong>Levotiroxina</strong> en monoterapia, 1.6–1.8 mcg/kg/día
+          según peso actual en adultos sin comorbilidad cardiovascular.</p>
+        </li>
+        <li class="paso">
+          <h4>4 · Población de riesgo</h4>
+          <p>Mayores de 65 años o con comorbilidad cardiovascular: iniciar con
+          dosis bajas y titular gradualmente según TSH y T4 libre.</p>
+        </li>
+        <li class="paso">
+          <h4>5 · Vigilar el sobretratamiento</h4>
+          <p>Exceso de levotiroxina se asocia a fibrilación auricular,
+          osteoporosis y fracturas: no sobrepasar la dosis necesaria.</p>
+        </li>
+        <li class="paso referencia">
+          <h4>6 · Referir a segundo nivel si</h4>
+          <p>Bocio compresivo, embarazo con requerimientos difíciles,
+          refractariedad al ajuste de dosis, sospecha de causa central.</p>
+        </li>
+      </ol>
+      <p class="nota algoritmo-fuente">Fuente: GPC-IMSS-265-10, Diagnóstico y
+      Tratamiento del Hipotiroidismo. Simplificación para consulta; no sustituye
+      la guía completa.</p>
+      </div>
+
+      <div class="alg" data-alg="cefalea" hidden>
+      <h3 class="alg-titulo">⚡ Cefalea y migraña</h3>
+      <ol class="flow">
+        <li class="paso">
+          <h4>1 · Clasificar el dolor</h4>
+          <p>Tensional: bilateral, opresiva, de intensidad leve-moderada. Migraña:
+          unilateral pulsátil con náusea/fotofobia (GPC-047-08).</p>
+        </li>
+        <li class="paso referencia">
+          <h4>2 · Banderas rojas → urgencia</h4>
+          <p>Inicio súbito e intenso ("trueno"), déficit neurológico, fiebre con
+          rigidez de cuello, cefalea pos-trauma o cambio brusco de patrón.</p>
+        </li>
+        <li class="paso">
+          <h4>3 · Cefalea tensional episódica</h4>
+          <p>Ácido acetilsalicílico con evidencia de eficacia (1000 mg; también
+          500–650 o 250 mg frente a placebo en la guía).</p>
+        </li>
+        <li class="paso">
+          <h4>4 · Ataque agudo de migraña</h4>
+          <p>Paracetamol 1000 mg ± metoclopramida 10 mg: eficacia similar a
+          sumatriptán 100 mg a 2 horas. Alternativa: AAS 900–1000 mg.</p>
+        </li>
+        <li class="paso">
+          <h4>5 · Cefalea crónica (&gt; 15 días/mes durante &gt; 3 meses)</h4>
+          <p>Buscar sobreuso de analgésicos; iniciar manejo preventivo según la
+          guía y revaluar el diagnóstico.</p>
+        </li>
+        <li class="paso referencia">
+          <h4>6 · Referir a segundo nivel si</h4>
+          <p>Banderas rojas, refractariedad al tratamiento agudo, cefalea crónica
+          progresiva o cambio de patrón en paciente mayor.</p>
+        </li>
+      </ol>
+      <p class="nota algoritmo-fuente">Fuente: GPC-IMSS-047-08, Diagnóstico y
+      Tratamiento de la Cefalea. Simplificación para consulta; no sustituye la
+      guía completa.</p>
+      </div>
+
+      <div class="alg" data-alg="anemia" hidden>
+      <h3 class="alg-titulo">🩸 Anemia — por deficiencia de hierro</h3>
+      <ol class="flow">
+        <li class="paso">
+          <h4>1 · Sospecha</h4>
+          <p>Fatiga, palidez, disnea de esfuerzo; factores de riesgo: menstruación
+          abundante, dieta pobre en hierro, sangrado digestivo. La infección por
+          H. pylori está asociada a anemia (OR 2.22 en la guía).</p>
+        </li>
+        <li class="paso">
+          <h4>2 · Laboratorio diagnóstico</h4>
+          <p>Biometría hemática completa + ferritina, hierro sérico y capacidad
+          total de fijación de transferrina.</p>
+        </li>
+        <li class="paso">
+          <h4>3 · Tratamiento de primera línea: hierro oral</h4>
+          <p>Sulfato o gluconato ferroso por su biodisponibilidad. Dosis en
+          hierro elemental: <strong>adultos 180 mg/día en 3 tomas; niños 3–6
+          mg/kg/día</strong>. Profilaxis del embarazo: 60 mg/día desde el 2º
+          trimestre hasta 3 meses postparto.</p>
+        </li>
+        <li class="paso">
+          <h4>4 · Optimizar la absorción</h4>
+          <p>Administrar con ácido ascórbico/jugos; evitar tomarlo junto con
+          lácteos, té o antiácidos.</p>
+        </li>
+        <li class="paso bifurca">
+          <h4>5 · ¿Respuesta al tratamiento?</h4>
+          <div class="ramas">
+            <div class="rama"><strong>Sí</strong>Continuar hasta reponer depósitos según la guía; buscar y tratar la causa.</div>
+            <div class="rama"><strong>No a 4 semanas</strong>Revisar adherencia y absorción; valorar hierro IV o estudio de pérdidas.</div>
+          </div>
+        </li>
+        <li class="paso referencia">
+          <h4>6 · Referir a segundo nivel si</h4>
+          <p>Sangrado activo, anemia grave sintomática, necesidad de transfusión,
+          anemia sin respuesta, o sospecha de otra causa (hemólisis, déficit de
+          B12/folatos, enfermedad crónica).</p>
+        </li>
+      </ol>
+      <p class="nota algoritmo-fuente">Fuente: GPC-IMSS-415-10, Diagnóstico y
+      Tratamiento de la Anemia por Deficiencia de Hierro. Simplificación para
+      consulta; no sustituye la guía completa.</p>
+      </div>
+
+      <div class="alg" data-alg="ivu" hidden>
+      <h3 class="alg-titulo">🧫 Infección del tracto urinario bajo</h3>
+      <ol class="flow">
+        <li class="paso">
+          <h4>1 · Sospecha clínica</h4>
+          <p>Disuria, polaquiuria, urgencia y dolor suprapúbico. ≥ 2 síntomas
+          clásicos aumentan la sensibilidad clínica (GPC-077-08).</p>
+        </li>
+        <li class="paso">
+          <h4>2 · Confirmación económica</h4>
+          <p>Tira reactiva (esterasa leucocitaria + nitritos): la prueba más
+          económica y sensible en primer nivel.</p>
+        </li>
+        <li class="paso">
+          <h4>3 · Mujer no embarazada, IVU baja no complicada</h4>
+          <p><strong>TMP/SMZ 160/800 mg c/12 h × 3 días</strong> (primera
+          elección) o <strong>nitrofurantoína 100 mg c/12 h</strong> (3–7 días;
+          en no embarazadas, 3 días tan efectivos como 7).</p>
+        </li>
+        <li class="paso">
+          <h4>4 · Con nitrofurantoína</h4>
+          <p>Evitar alcalinizantes de orina; ingerir acidificantes (jugo de
+          arándano) que favorecen su acción.</p>
+        </li>
+        <li class="paso">
+          <h4>5 · Piuria con cultivos negativos</h4>
+          <p>Considerar piuria estéril: balanitis, uretritis, tuberculosis
+          urogenital u otras causas; pedir cultivos específicos.</p>
+        </li>
+        <li class="paso referencia">
+          <h4>6 · Referir a segundo nivel si</h4>
+          <p>Embarazo, paciente masculino, fiebre o dolor lumbar (IVU alta),
+          recurrencias, infección complicada, o cultivos negativos persistentes.</p>
+        </li>
+      </ol>
+      <p class="nota algoritmo-fuente">Fuente: GPC-IMSS-077-08, Diagnóstico y
+      Tratamiento de la Infección del Tracto Urinario Bajo. Simplificación para
+      consulta; no sustituye la guía completa.</p>
+      </div>
+
+      <div class="alg" data-alg="artritis" hidden>
+      <h3 class="alg-titulo">🦴 Artritis reumatoide</h3>
+      <ol class="flow">
+        <li class="paso">
+          <h4>1 · Diagnóstico clínico</h4>
+          <p>Artritis simétrica periférica de ≥ 6 semanas; apoyar con
+          factor reumatoide / anticuerpos anti-CCP y radiografías (GPC-195-08).</p>
+        </li>
+        <li class="paso">
+          <h4>2 · Iniciar FARME lo antes posible</h4>
+          <p>Metotrexato de inicio <strong>7.5–15 mg/semana</strong> (tendencia a
+          15), con titulación gradual hasta 20–25 mg/semanal a los 3–4 meses si
+          no hay respuesta; valorar vía subcutánea en refractariedad.</p>
+        </li>
+        <li class="paso">
+          <h4>3 · Ácido fólico de apoyo</h4>
+          <p>5–10 mg/semana se asocia a reducción significativa de los efectos
+          adversos del metotrexato.</p>
+        </li>
+        <li class="paso">
+          <h4>4 · Alternativas y escalamiento</h4>
+          <p>Hidroxicloroquina, leflunomida, sulfasalazina; anti-TNF como segunda
+          opción (sustitución o adición al MTX) en segundo nivel.</p>
+        </li>
+        <li class="paso">
+          <h4>5 · Puente con esteroides</h4>
+          <p>Esteroides orales en dosis bajas como tratamiento puente;
+          <strong>disminuirlos al lograr remisión</strong>.</p>
+        </li>
+        <li class="paso">
+          <h4>6 · Objetivo terapéutico</h4>
+          <p>Remisión o baja actividad de la enfermedad. Coadyuvantes: educación,
+          ejercicio, termoterapia y AINE para el control de síntomas.</p>
+        </li>
+        <li class="paso referencia">
+          <h4>7 · Referir a segundo nivel si</h4>
+          <p>Diagnóstico inicial para confirmación, falla o toxicidad a FARME,
+          complicaciones extraarticulares.</p>
+        </li>
+      </ol>
+      <p class="nota algoritmo-fuente">Fuente: GPC-IMSS-195-08, Diagnóstico y
+      Tratamiento de la Artritis Reumatoide. Simplificación para consulta; no
+      sustituye la guía completa.</p>
+      </div>
+
+      <div class="alg" data-alg="osteoporosis" hidden>
+      <h3 class="alg-titulo">🦷 Osteoporosis</h3>
+      <ol class="flow">
+        <li class="paso">
+          <h4>1 · Detección en primer nivel</h4>
+          <p>Evaluación clínica + factores de riesgo (antecedente familiar,
+          cifosis, fractura por trauma leve, esteroides crónicos, tabaquismo,
+          bajo aporte de calcio/vitamina D) + densitometría ósea (DEXA)
+          (GPC-083-08).</p>
+        </li>
+        <li class="paso">
+          <h4>2 · Confirmar osteoporosis</h4>
+          <p>Masa ósea baja documentada por DEXA + deterioro microarquitectural y
+          riesgo de fractura; valorar causas secundarias (esteroides, síndrome de
+          Cushing, hipogonadismo, alcohol).</p>
+        </li>
+        <li class="paso">
+          <h4>3 · Tratamiento farmacológico</h4>
+          <p>Con fractura vertebral u osteoporosis confirmada: <strong>alendronato
+          10 mg/día o 70 mg/semana + calcio 500 mg + vitamina D 400 UI</strong>
+          para reducir el riesgo de fractura.</p>
+        </li>
+        <li class="paso">
+          <h4>4 · Técnica correcta del bifosfonato</h4>
+          <p>Tomar en ayunas con un vaso de agua, permanecer erguido 30 minutos;
+          vigilar efectos gastrointestinales.</p>
+        </li>
+        <li class="paso">
+          <h4>5 · Prevención complementaria</h4>
+          <p>Prevención de caídas, ejercicio con carga, dieta rica en calcio y
+          vitamina D, suspensión de tabaco.</p>
+        </li>
+        <li class="paso referencia">
+          <h4>6 · Referir a segundo nivel si</h4>
+          <p>Fractura nueva bajo tratamiento, densitometría para confirmación,
+          causas secundarias que requieren estudio, o intolerancia a bifosfonatos.</p>
+        </li>
+      </ol>
+      <p class="nota algoritmo-fuente">Fuente: GPC-IMSS-083-08, Diagnóstico y
+      Tratamiento de la Osteoporosis en la Mujer de 50 Años o Más y en el
+      Hombre de 60 Años o Más. Simplificación para consulta; no sustituye la
+      guía completa.</p>
+      </div>
     </section>
 
     <section id="remedios" hidden>
