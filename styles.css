@@ -179,3 +179,63 @@ footer {
 .tema-grupo > strong { color: var(--teal-dark); font-size: 14px; }
 .tema-grupo ul { margin: 4px 0 0 16px; }
 .tema-doc { font-size: 12.5px; margin-bottom: 6px; }
+
+/* --- pestañas principales --- */
+.tabs {
+  display: flex; gap: 6px; justify-content: center;
+  padding: 10px 16px; background: var(--card);
+  border-bottom: 1px solid var(--border);
+}
+.tab {
+  padding: 9px 20px; font-size: 14px; font-weight: 600;
+  background: transparent; border: 1px solid var(--border);
+  border-radius: 22px; cursor: pointer; color: var(--muted);
+}
+.tab:hover { border-color: var(--teal); color: var(--teal-dark); }
+.tab.activo { background: var(--teal); color: #fff; border-color: var(--teal); }
+
+/* --- remedios caseros --- */
+#remedios[hidden] { display: none; }
+.remedios-intro p { font-size: 14px; }
+.leyenda-ev { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.badge-ev {
+  display: inline-block; font-size: 11.5px; font-weight: 700;
+  padding: 3px 10px; border-radius: 12px; white-space: nowrap;
+}
+.badge-ev.alta { background: #e3f4e5; color: #1e6b2f; border: 1px solid #b7e2bd; }
+.badge-ev.moderada { background: #e7f0fb; color: #1d4f91; border: 1px solid #bcd4f0; }
+.badge-ev.limitada { background: #f4f1e6; color: #7a6415; border: 1px solid #e4d9b0; }
+.badge-ev.mixta { background: #fbeaea; color: #9b2c2c; border: 1px solid #f0c4c4; }
+
+.filtro-remedios { text-align: center; margin: 18px 0 6px; }
+
+#lista-remedios {
+  display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 14px;
+}
+@media (max-width: 860px) { #lista-remedios { grid-template-columns: 1fr; } }
+
+.remedio { display: flex; flex-direction: column; gap: 8px; }
+.remedio-head { display: flex; align-items: center; gap: 10px; }
+.remedio-icono { font-size: 26px; }
+.remedio-head h4 { color: var(--teal-dark); font-size: 16px; flex: 1; }
+.remedio p { font-size: 13.5px; }
+.remedio-uso { color: var(--text); }
+.remedio-ev { color: var(--muted); }
+.remedio-seg {
+  background: #fdf6ec; border: 1px solid #f0e0bd; border-radius: 10px;
+  padding: 10px 12px; font-size: 12.5px;
+}
+.remedio-seg strong { color: #8a5a00; }
+.remedio-seg ul { margin: 4px 0 0 18px; }
+.remedio-seg li { margin: 2px 0; }
+.remedio-fuentes {
+  margin-top: auto; padding-top: 8px; border-top: 1px dashed var(--border);
+  display: flex; flex-direction: column; gap: 3px;
+}
+.remedio-fuentes a {
+  font-size: 12px; color: var(--teal); text-decoration: none;
+}
+.remedio-fuentes a:hover { text-decoration: underline; }
+
+.aviso-seguridad { margin-top: 20px; border-left: 4px solid var(--accent); }
+.aviso-seguridad a { color: var(--teal); }

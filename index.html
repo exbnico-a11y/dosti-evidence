@@ -24,6 +24,11 @@
     Toda recomendación debe verificarse en la fuente citada.
   </div>
 
+  <nav class="tabs">
+    <button class="tab activo" data-vista="buscador">🔎 Buscador de evidencia</button>
+    <button class="tab" data-vista="remedios">🌿 Remedios caseros con evidencia</button>
+  </nav>
+
   <main>
     <section class="hero" id="hero">
       <h2>¿Qué necesitas resolver hoy en consulta?</h2>
@@ -39,6 +44,9 @@
         <button class="chip-tema" data-tema="diabetes">Diabetes</button>
         <button class="chip-tema" data-tema="dislipidemias">Dislipidemias</button>
         <button class="chip-tema" data-tema="obesidad">Obesidad</button>
+        <button class="chip-tema" data-tema="epoc">EPOC</button>
+        <button class="chip-tema" data-tema="asma">Asma</button>
+        <button class="chip-tema" data-tema="neumonia">Neumonía</button>
       </div>
       <div class="ejemplos">
         <span>Ejemplos:</span>
@@ -59,6 +67,56 @@
         <h3>Fuentes citadas</h3>
         <div id="fuentes"></div>
       </aside>
+    </section>
+
+    <section id="remedios" hidden>
+      <div class="card intro remedios-intro">
+        <h3>🌿 Remedios caseros y herbolaria con evidencia</h3>
+        <p>Tratamientos naturales y “medicinas de la abuelita” <strong>que sí fueron
+        estudiados</strong>: cada uno muestra su nivel de evidencia, su uso correcto y sus
+        advertencias de seguridad, con cita a la fuente (Cochrane, NCCIH/NIH, ACG, FDA y
+        meta-análisis publicados). Para la tradición herbolaria mexicana se enlaza la
+        Biblioteca Digital de la Medicina Tradicional Mexicana (UNAM/INI).</p>
+        <p><strong>Regla de oro:</strong> son complementos, no sustitutos. Ningún remedio
+        debe reemplazar el tratamiento prescrito (en especial antihipertensivos,
+        antidiabéticos o anticoagulantes) y todo uso debe documentarse en la historia clínica.</p>
+        <div class="leyenda-ev">
+          <span class="badge-ev alta">Evidencia sólida</span>
+          <span class="badge-ev moderada">Evidencia moderada</span>
+          <span class="badge-ev limitada">Evidencia limitada · bajo riesgo</span>
+          <span class="badge-ev mixta">Evidencia mixta</span>
+        </div>
+      </div>
+
+      <div class="ejemplos filtro-remedios">
+        <span>Categoría:</span>
+        <button class="chip-tema activo" data-cat="todas">Todas</button>
+        <button class="chip-tema" data-cat="cardiovascular">Corazón y metabolismo</button>
+        <button class="chip-tema" data-cat="respiratorio">Respiratorio</button>
+        <button class="chip-tema" data-cat="digestivo">Digestivo</button>
+        <button class="chip-tema" data-cat="piel">Piel</button>
+        <button class="chip-tema" data-cat="soporte">De la abuelita (soporte)</button>
+      </div>
+
+      <div id="lista-remedios"></div>
+
+      <div class="card intro aviso-seguridad">
+        <h3>⚠️ Seguridad primero — lo que el médico debe vigilar</h3>
+        <ul>
+          <li><strong>Interacciones:</strong> jamaica y ajo pueden potenciar el efecto de los
+          antihipertensivos (hipotensión); ajo y jengibre aumentan el riesgo de sangrado con
+          anticoagulantes o antiagregantes.</li>
+          <li><strong>Miel: nunca en menores de 1 año</strong> (riesgo de botulismo infantil).</li>
+          <li><strong>Embarazo y lactancia:</strong> toda herbolaria requiere valoración previa;
+          solo el jengibre cuenta con evidencia razonable de seguridad para la náusea del embarazo.</li>
+          <li><strong>“Natural” no significa inocuo:</strong> preguntar activamente por remedios
+          caseros en el interrogatorio y registrarlos.</li>
+        </ul>
+        <p class="nota">Referencia nacional para la herbolaria tradicional documentada:
+        <a href="http://www.medicinatradicionalmexicana.unam.mx/" target="_blank" rel="noopener">
+        Biblioteca Digital de la Medicina Tradicional Mexicana (UNAM/INI)</a> — Atlas de las
+        Plantas de la Medicina Tradicional Mexicana, 1,045 monografías.</p>
+      </div>
     </section>
 
     <section id="inicio">
@@ -84,6 +142,8 @@
   <footer>
     <p>Fuentes: CENETEC · IMSS · Secretaría de Salud (NOM-030-SSA2-2009) · gob.mx.
     Índice generado el 2026-09-15 (v0.4 — 1,897 fragmentos, 12 fuentes, 4 padecimientos). Las guías clínicas se actualizan periódicamente.</p>
+    <p>Sección 🌿 Remedios caseros: Cochrane Library · NCCIH/NIH · ACG · FDA · meta-análisis
+    publicados · Biblioteca Digital de la Medicina Tradicional Mexicana (UNAM/INI).</p>
   </footer>
 
   <div class="modal-overlay" id="modal-cedula">
