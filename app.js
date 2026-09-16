@@ -386,6 +386,93 @@ function chunkInfo(cid) {
   return { docCorto: doc.corto, docNombre: doc.nombre, pagina: c[1], texto: c[2] };
 }
 
+/* ---------- detección de padecimiento (alias clínicos y coloquiales) ---------- */
+
+const NOMBRE_PADECIMIENTO = {
+  hipertension: "Hipertensión arterial", diabetes: "Diabetes mellitus tipo 2",
+  dislipidemias: "Dislipidemias", obesidad: "Obesidad", asma: "Asma bronquial",
+  epoc: "EPOC", neumonia: "Neumonía adquirida en la comunidad",
+  erc: "Enfermedad renal crónica", depresion: "Trastorno depresivo",
+  ansiedad: "Trastornos de ansiedad", hipotiroidismo: "Hipotiroidismo",
+  cefalea: "Cefalea y migraña", anemia: "Anemia ferropénica",
+  ivu: "Infección del tracto urinario", artritis: "Artritis reumatoide",
+  osteoporosis: "Osteoporosis",
+};
+
+/* alias normalizados (sin acentos, minúsculas); clínicos + coloquiales */
+const ALIAS_PADECIMIENTOS = {
+  hipertension: ["hipertension", "hipertension arterial", "hta", "presion alta",
+    "tension alta", "presion arterial alta", "hipertenso", "hipertensa"],
+  diabetes: ["diabetes", "diabetes mellitus", "dm2", "dm 2", "azucar alta",
+    "glucosa alta", "hiperglucemia", "diabetico", "diabetica"],
+  dislipidemias: ["dislipidemia", "dislipidemias", "colesterol alto",
+    "trigliceridos altos", "grasa en la sangre", "hipercolesterolemia",
+    "colesterol y trigliceridos"],
+  obesidad: ["obesidad", "obesidad morbida", "sobrepeso", "peso excesivo",
+    "obeso", "obesa", "imc alto"],
+  asma: ["asma", "asma bronquial", "crisis de asma"],
+  epoc: ["epoc", "enfisema", "bronquitis cronica"],
+  neumonia: ["neumonia", "pulmonia", "neumonia adquirida en la comunidad"],
+  erc: ["enfermedad renal cronica", "insuficiencia renal", "rinon cronico",
+    "falla renal", "erc", "rinones fallando"],
+  depresion: ["depresion", "tristeza profunda", "animo bajo", "depresivo",
+    "depresiva", "melancolia"],
+  ansiedad: ["ansiedad", "ataque de panico", "crisis de panico",
+    "nervios constantes", "tag", "trastorno de ansiedad"],
+  hipotiroidismo: ["hipotiroidismo", "tiroides baja", "tiroides lenta",
+    "tiroides baja de funcion"],
+  cefalea: ["cefalea", "dolor de cabeza", "migrana", "jaqueca", "dolor de craneo"],
+  anemia: ["anemia", "hierro bajo", "sangre baja", "anemico", "anemica"],
+  ivu: ["ivu", "itu", "infeccion urinaria", "infeccion del tracto urinario",
+    "orinar con ardor", "ardor al orinar", "orina con ardor"],
+  artritis: ["artritis", "reuma", "artritis reumatoide", "articulaciones inflamadas"],
+  osteoporosis: ["osteoporosis", "huesos fragiles", "densidad osea baja",
+    "fractura por fragilidad"],
+};
+
+const ALIAS_A_TEMA = {};
+Object.entries(ALIAS_PADECIMIENTOS).forEach(([tema, aliases]) =>
+  aliases.forEach(a => { ALIAS_A_TEMA[norm(a)] = tema; }));
+
+/* detecta el padecimiento de la consulta; el alias más largo manda */
+function detectarPadecimiento(q) {
+  const qn = " " + norm(q.toLowerCase()).replace(/[^a-z0-9ñ ]/g, " ") + " ";
+  const aliases = Object.keys(ALIAS_A_TEMA).sort((a, b) => b.length - a.length);
+  for (const alias of aliases) {
+    if (alias.length < 5) {
+      const rx = new RegExp(`\\b${alias}\\b`);
+      if (rx.test(qn)) return ALIAS_A_TEMA[alias];
+    } else if (qn.includes(alias)) {
+      return ALIAS_A_TEMA[alias];
+    }
+  }
+  return null;
+}
+
+/* padecimientos del catálogo más cercanos a una consulta sin coincidencias */
+const TOKENS_GENERICOS = new Set(["dolor", "sintoma", "sintomas", "cronica", "cronico",
+  "severa", "severo", "aguda", "agudo", "adulto", "adulta", "nino", "nina",
+  "paciente", "malestar", "mujer", "hombre"]);
+function padecimientosCercanos(q, limite = 4) {
+  const toks = new Set([...tokenize(q)].filter(t => !TOKENS_GENERICOS.has(t)));
+  if (!toks.size) return [];
+  const scores = [];
+  for (const [tema, aliases] of Object.entries(ALIAS_PADECIMIENTOS)) {
+    let s = 0;
+    for (const a of aliases) {
+      const at = tokenize(a);
+      if (!at.length) continue;
+      for (const t of at) {
+        if (t.length < 4) continue; // siglas cortas y preposiciones no puntúan aquí
+        if (toks.has(t)) s += 1 / at.length;
+        else if (t.length >= 5 && [...toks].some(qt => qt.length >= 5 && (qt.startsWith(t) || t.startsWith(qt)))) s += 0.5 / at.length;
+      }
+    }
+    if (s > 0.2) scores.push([tema, s]);
+  }
+  return scores.sort((a, b) => b[1] - a[1]).slice(0, limite).map(([t]) => t);
+}
+
 function limpiar(t) { return t.replace(/\s+/g, " ").trim(); }
 
 function render(resultados, query, opts = {}) {
@@ -398,9 +485,18 @@ function render(resultados, query, opts = {}) {
 
   if (!resultados.length) {
     const sugeridas = sugerirConsultas(query);
+    const cercanos = padecimientosCercanos(query);
+    const listaPadecimientos = cercanos.length ? cercanos : Object.keys(NOMBRE_PADECIMIENTO);
     box.innerHTML = `<p class="sin-resultados">Sin coincidencias exactas en las guías
       cargadas para: “${query}”. Reformula con términos clínicos (fármacos, cifras,
       comorbilidades) o sus siglas (HTA, IECA, BCC…).</p>` +
+      `<div class="sugeridas-vacio"><strong>${cercanos.length
+        ? "🏥 ¿Buscabas alguno de estos padecimientos del catálogo?"
+        : "🏥 Padecimientos con evidencia disponible en el catálogo"}</strong>
+        <p class="nota">${cercanos.length
+          ? "Evidencia disponible con guías oficiales indexadas:"
+          : "Todavía no tenemos ese tema; elige uno de los cubiertos:"}</p>` +
+        listaPadecimientos.map(t => `<button type="button" class="chip chip-padecimiento" data-tema="${t}">${NOMBRE_PADECIMIENTO[t]}</button>`).join("") + `</div>` +
       (sugeridas.length ? `<div class="sugeridas-vacio"><strong>💡 Respuestas sugeridas del catálogo</strong>
         <p class="nota">Lo más cercano que existe en las guías indexadas; elige una para buscarla:</p>` +
         sugeridas.map(s => {
@@ -412,6 +508,14 @@ function render(resultados, query, opts = {}) {
       b.addEventListener("click", () => {
         document.getElementById("q").value = b.dataset.q;
         RUN_QUERY(b.dataset.q);
+      }));
+    box.querySelectorAll(".chip-padecimiento").forEach(b =>
+      b.addEventListener("click", () => {
+        TEMA_ACTUAL = b.dataset.tema;
+        document.querySelectorAll(".chip-tema").forEach(c =>
+          c.classList.toggle("activo", c.dataset.tema === b.dataset.tema));
+        document.getElementById("q").value = NOMBRE_PADECIMIENTO[b.dataset.tema];
+        RUN_QUERY(NOMBRE_PADECIMIENTO[b.dataset.tema]);
       }));
     fuentes.innerHTML = "";
     return;
@@ -430,6 +534,11 @@ function render(resultados, query, opts = {}) {
     `${o.s} <span class="cite" data-c="${o.ref}">[${o.ref + 1}]</span>`;
 
   let html = `<h3>Respuesta basada en guías oficiales</h3>`;
+  if (opts.padecimiento) {
+    html += `<div class="aviso-padecimiento">🏥 Padecimiento detectado: <strong>${NOMBRE_PADECIMIENTO[opts.padecimiento]}</strong>
+      — evidencia priorizada de sus guías oficiales.
+      <button type="button" class="btn-algoritmo" data-alg="${opts.padecimiento}">📋 Ver algoritmo clínico</button></div>`;
+  }
   if (opts.modo && opts.modo !== "exacto") {
     const explicacion = {
       "sin-filtro": "se amplió la búsqueda a todos los padecimientos",
@@ -481,6 +590,15 @@ function render(resultados, query, opts = {}) {
       <button id="btn-ia-config" class="btn-ia-config" title="Configurar API key y modelo">⚙️</button></div>`;
   }
   box.innerHTML = html;
+
+  // botón "ver algoritmo" del padecimiento detectado
+  const btnAlg = box.querySelector(".btn-algoritmo");
+  if (btnAlg) btnAlg.addEventListener("click", () => {
+    const tab = document.querySelector('[data-vista="algoritmo"]');
+    if (tab) tab.click();
+    const chip = document.querySelector(`.chip-alg[data-alg="${btnAlg.dataset.alg}"]`);
+    if (chip) chip.click();
+  });
 
   // --- refinamiento IA (opcional, BYOK) ---
   const btnIA = box.querySelector("#btn-ia");
@@ -1285,6 +1403,14 @@ async function init() {
     const panelSug = document.getElementById("sugerencias");
     if (panelSug) panelSug.hidden = true;
 
+    // detección de padecimiento por alias (clínico o coloquial)
+    const padecimiento = detectarPadecimiento(q);
+    if (padecimiento && padecimiento !== TEMA_ACTUAL) {
+      TEMA_ACTUAL = padecimiento;
+      document.querySelectorAll(".chip-tema").forEach(c =>
+        c.classList.toggle("activo", c.dataset.tema === padecimiento));
+    }
+
     let resultados = buscar(q, 10, TEMA_ACTUAL);
     let modo = "exacto";
     if (!resultados.length && TEMA_ACTUAL !== "todos") {
@@ -1298,7 +1424,7 @@ async function init() {
         if (resultados.length) modo = "expandida";
       }
     }
-    render(resultados, q, { modo });
+    render(resultados, q, { modo, padecimiento });
     document.getElementById("resultados").scrollIntoView({ behavior: "smooth", block: "start" });
   };
   RUN_QUERY = run;
