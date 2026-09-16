@@ -182,6 +182,15 @@ footer {
 .chip-tema.activo { background: var(--teal); color: #fff; border-color: var(--teal); }
 
 /* --- panel de sugerencias de búsqueda --- */
+.btn-home {
+  padding: 7px 14px; font-size: 13px; font-weight: 600; cursor: pointer;
+  background: var(--card); border: 1px solid var(--border); border-radius: 16px;
+  color: var(--teal-dark); white-space: nowrap;
+  margin-left: auto; margin-right: 10px;
+}
+.btn-home:hover { border-color: var(--teal); background: rgba(20,120,110,.08); }
+.brand { cursor: pointer; }
+.brand:focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; border-radius: 8px; }
 .buscador-wrap { position: relative; max-width: 720px; margin: 0 auto; }
 .sugerencias {
   position: absolute; top: 100%; left: 0; right: 0; z-index: 40;

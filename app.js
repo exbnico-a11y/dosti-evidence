@@ -1199,6 +1199,27 @@ function irA(vista, q, tema) {
 /* ---------- pestañas principales ---------- */
 
 function initTabs() {
+  const irInicio = () => {
+    document.querySelectorAll(".tabs .tab").forEach(t =>
+      t.classList.toggle("activo", t.dataset.vista === "buscador"));
+    const res = document.getElementById("resultados");
+    delete res.dataset.mostrado;
+    res.hidden = true;
+    document.getElementById("inicio").hidden = false;
+    document.getElementById("hero").hidden = false;
+    document.getElementById("remedios").hidden = true;
+    document.getElementById("algoritmo").hidden = true;
+    const sug = document.getElementById("sugerencias");
+    if (sug) sug.hidden = true;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+  document.getElementById("btn-home").addEventListener("click", irInicio);
+  const brand = document.getElementById("brand-home");
+  brand.addEventListener("click", irInicio);
+  brand.addEventListener("keydown", e => {
+    if (e.key === "Enter" || e.key === " ") { e.preventDefault(); irInicio(); }
+  });
+
   document.querySelectorAll(".tabs .tab").forEach(tab =>
     tab.addEventListener("click", () => {
       document.querySelectorAll(".tabs .tab").forEach(t =>
