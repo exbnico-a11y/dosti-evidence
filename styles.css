@@ -182,7 +182,7 @@ footer {
 .chip-tema.activo { background: var(--teal); color: #fff; border-color: var(--teal); }
 
 /* --- panel de sugerencias de búsqueda --- */
-.buscador-wrap { position: relative; max-width: 720px; margin: 0 auto; }
+.buscador-wrap { position: relative; max-width: 860px; margin: 0 auto; }
 .sugerencias {
   position: absolute; top: 100%; left: 0; right: 0; z-index: 40;
   margin-top: 6px; background: var(--card); border: 1px solid var(--border);
