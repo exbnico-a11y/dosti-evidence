@@ -388,7 +388,7 @@ function chunkInfo(cid) {
 
 function limpiar(t) { return t.replace(/\s+/g, " ").trim(); }
 
-function render(resultados, query) {
+function render(resultados, query, opts = {}) {
   const box = document.getElementById("respuesta");
   const fuentes = document.getElementById("fuentes");
   const sec = document.getElementById("resultados");
@@ -397,9 +397,22 @@ function render(resultados, query) {
   document.getElementById("inicio").hidden = true;
 
   if (!resultados.length) {
-    box.innerHTML = `<p class="sin-resultados">Sin resultados suficientes en las guías
-      cargadas para: “${query}”. Reformula con términos clínicos
-      (fármacos, cifras de PA, comorbilidades) o sus siglas (HTA, IECA, BCC…).</p>`;
+    const sugeridas = sugerirConsultas(query);
+    box.innerHTML = `<p class="sin-resultados">Sin coincidencias exactas en las guías
+      cargadas para: “${query}”. Reformula con términos clínicos (fármacos, cifras,
+      comorbilidades) o sus siglas (HTA, IECA, BCC…).</p>` +
+      (sugeridas.length ? `<div class="sugeridas-vacio"><strong>💡 Respuestas sugeridas del catálogo</strong>
+        <p class="nota">Lo más cercano que existe en las guías indexadas; elige una para buscarla:</p>` +
+        sugeridas.map(s => {
+          const texto = s.texto.length > 110 ? s.texto.slice(0, 110).replace(/\s\S*$/, "") + "…" : s.texto;
+          return `<button type="button" class="chip chip-sugerido" data-q="${escHtml(s.texto)}">${escHtml(texto)}
+            <span class="sug-fuente">${escHtml(s.fuente)}</span></button>`;
+        }).join("") + `</div>` : "");
+    box.querySelectorAll(".chip-sugerido").forEach(b =>
+      b.addEventListener("click", () => {
+        document.getElementById("q").value = b.dataset.q;
+        RUN_QUERY(b.dataset.q);
+      }));
     fuentes.innerHTML = "";
     return;
   }
@@ -417,6 +430,14 @@ function render(resultados, query) {
     `${o.s} <span class="cite" data-c="${o.ref}">[${o.ref + 1}]</span>`;
 
   let html = `<h3>Respuesta basada en guías oficiales</h3>`;
+  if (opts.modo && opts.modo !== "exacto") {
+    const explicacion = {
+      "sin-filtro": "se amplió la búsqueda a todos los padecimientos",
+      "expandida": "se usaron términos equivalentes del catálogo",
+    };
+    html += `<p class="aviso-relajado">⚠️ Sin coincidencia exacta para “${escHtml(query)}”.
+      Mostrando la evidencia más cercana (${explicacion[opts.modo] || "búsqueda ampliada"}).</p>`;
+  }
   if (sintesis.length) {
     html += `<div class="sintesis">`;
     const vistos = new Set();
@@ -1077,6 +1098,133 @@ function initTabs() {
 
 /* ---------- arranque ---------- */
 
+/* ---------- sugerencias de búsqueda y respaldo sin resultados ---------- */
+
+const escHtml = s => s.replace(/[&<>"']/g, c =>
+  ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+/* Expansión por prefijo: términos del índice que empiecen como el escrito
+   (rescue de errores de dedo / variantes: "hipertension" → "hipertensión" ya
+   normalizado; "sulfatoferroso" → término indexado más cercano). */
+function expandirConsulta(q) {
+  const terms = rawTerms(norm(q.toLowerCase()));
+  if (!terms.length) return null;
+  let cambio = false;
+  const salida = terms.map(w => {
+    if (w.length < 4 || IDX.idf[w] !== undefined) return w;
+    let mejor = null, mejorIdf = Infinity;
+    for (const v in IDX.idf) {
+      if (v.startsWith(w) && IDX.idf[v] < mejorIdf) { mejor = v; mejorIdf = IDX.idf[v]; }
+    }
+    if (mejor) { cambio = true; return mejor; }
+    return w;
+  });
+  return cambio ? salida.join(" ") : null;
+}
+
+/* Frases candidatas del catálogo que contienen los términos escritos.
+   Alimenta tanto el panel en vivo como las consultas sugeridas del vacío. */
+function frasesDelCatalogo(q, limite = 6) {
+  const terms = tokenize(q);
+  if (!terms.length) return [];
+  const sugs = new Map();
+  for (const [cid] of buscar(q, 24, TEMA_ACTUAL)) {
+    const c = IDX.chunks[cid];
+    const doc = IDX.meta.docs[c[0]];
+    for (const s of oraciones(c[2])) {
+      const t = limpiar(s);
+      // descartar fragmentos de tabla (alta densidad de dígitos / encabezados)
+      if (/^(f[aá]rmaco|cuadro|tabla|dosis|presentaci[oó]n|principio activo|clave)\b/i.test(t)) continue;
+      if (((t.match(/\d/g) || []).length / t.length) > 0.12) continue;
+      if (t.length < 25 || t.length > 160) continue;
+      const baj = norm(t.toLowerCase());
+      if (!terms.some(term => baj.includes(term))) continue;
+      if (!VERBO_ACCION.test(t) && !/\d/.test(t)) continue;
+      const clave = t.slice(0, 50);
+      if ([...sugs.keys()].some(k => k === clave || k.startsWith(clave) || clave.startsWith(k))) continue;
+      sugs.set(clave, { texto: t, fuente: `${doc.corto} · p.${c[1]}` });
+      if (sugs.size >= limite) return [...sugs.values()];
+    }
+  }
+  return [...sugs.values()];
+}
+
+/* Consultas sugeridas cuando no hay NADA: termino por término + ejemplos del catálogo */
+function sugerirConsultas(q) {
+  const directas = frasesDelCatalogo(q, 4);
+  if (directas.length) return directas;
+  const terms = tokenize(q);
+  const salida = [];
+  const vistos = new Set();
+  for (const t of terms) {
+    for (const [cid] of buscar(t, 6, "todos")) {
+      const c = IDX.chunks[cid];
+      const doc = IDX.meta.docs[c[0]];
+      const frase = oraciones(c[2]).map(limpiar)
+        .find(s => s.length >= 25 && s.length <= 120 && (VERBO_ACCION.test(s) || /\d/.test(s)) &&
+          !/^(f[aá]rmaco|cuadro|tabla|dosis|presentaci[oó]n|principio activo|clave)\b/i.test(s) &&
+          ((s.match(/\d/g) || []).length / s.length) <= 0.12);
+      if (!frase) continue;
+      const clave = frase.slice(0, 50);
+      if (vistos.has(clave)) continue;
+      vistos.add(clave);
+      salida.push({ texto: frase, fuente: `${doc.corto} · p.${c[1]}` });
+      break;
+    }
+    if (salida.length >= 4) break;
+  }
+  if (salida.length) return salida;
+  // último recurso: las búsquedas de ejemplo curadas que ya vive en la portada
+  return [...document.querySelectorAll(".ejemplos .chip[data-q]")]
+    .slice(0, 4)
+    .map(ch => ({ texto: ch.dataset.q, fuente: "búsqueda de ejemplo" }));
+}
+
+/* Panel de sugerencias mientras se escribe (debounce + teclado) */
+function initSugerencias(run) {
+  const input = document.getElementById("q");
+  const box = document.getElementById("sugerencias");
+  if (!input || !box) return;
+  let items = [], activo = -1, timer = null;
+
+  const pintar = () => {
+    if (!items.length) { box.hidden = true; box.innerHTML = ""; return; }
+    box.innerHTML = items.map((s, i) => {
+      const texto = s.texto.length > 110 ? s.texto.slice(0, 110).replace(/\s\S*$/, "") + "…" : s.texto;
+      return `<button type="button" class="sug-item${i === activo ? " activo" : ""}" data-i="${i}">
+        <span class="sug-texto">${escHtml(texto)}</span>
+        <span class="sug-fuente">${escHtml(s.fuente)}</span>
+      </button>`;
+    }).join("");
+    box.hidden = false;
+    box.querySelectorAll(".sug-item").forEach(b =>
+      b.addEventListener("mousedown", e => { e.preventDefault(); elegir(+b.dataset.i); }));
+  };
+
+  const elegir = i => {
+    const s = items[i];
+    if (!s) return;
+    input.value = s.texto;
+    box.hidden = true; items = []; activo = -1;
+    run(input.value);
+  };
+
+  input.addEventListener("input", () => {
+    clearTimeout(timer);
+    const q = input.value.trim();
+    if (q.length < 3) { box.hidden = true; items = []; return; }
+    timer = setTimeout(() => { items = frasesDelCatalogo(q, 6); activo = -1; pintar(); }, 180);
+  });
+  input.addEventListener("keydown", e => {
+    if (box.hidden || !items.length) return;
+    if (e.key === "ArrowDown") { e.preventDefault(); e.stopImmediatePropagation(); activo = (activo + 1) % items.length; pintar(); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); e.stopImmediatePropagation(); activo = (activo - 1 + items.length) % items.length; pintar(); }
+    else if (e.key === "Enter" && activo >= 0) { e.preventDefault(); e.stopImmediatePropagation(); elegir(activo); }
+    else if (e.key === "Escape") { box.hidden = true; activo = -1; }
+  });
+  input.addEventListener("blur", () => setTimeout(() => { box.hidden = true; activo = -1; }, 150));
+}
+
 /* ---------- selector de algoritmos clínicos ---------- */
 function initAlgoritmos() {
   const chips = [...document.querySelectorAll(".chip-alg")];
@@ -1108,7 +1256,14 @@ async function init() {
                        ansiedad: "Trastornos de ansiedad", hipotiroidismo: "Hipotiroidismo",
                        cefalea: "Cefalea y migraña", anemia: "Anemia ferropénica",
                        ivu: "IVU en la mujer", artritis: "Artritis reumatoide",
-                       osteoporosis: "Osteoporosis" };
+                       osteoporosis: "Osteoporosis",
+                       evc: "EVC isquémica", embarazo_hipertensivo: "Enf. hipertensivas del embarazo",
+                       hemorragia_obstetrica: "Choque hemorrágico obstétrico",
+                       parto_pretermino: "Parto pretérmino", apendicitis: "Apendicitis aguda",
+                       colecistitis: "Colecistitis y colelitiasis", pancreatitis: "Pancreatitis aguda",
+                       dispepsia: "Dispepsia funcional", sinusitis: "Sinusitis aguda",
+                       faringoamigdalitis: "Faringoamigdalitis", conjuntivitis: "Conjuntivitis",
+                       bronquiolitis: "Bronquiolitis" };
   document.getElementById("doclist").innerHTML = temas.map(t => {
     const docs = IDX.meta.docs.filter(d => d.tema === t);
     return `<li class="tema-grupo"><strong>${nombreTema[t] || t}</strong> (${docs.length} fuentes)<ul>` +
@@ -1127,10 +1282,27 @@ async function init() {
   const run = q => {
     q = q.trim();
     if (!q) return;
-    render(buscar(q, 10, TEMA_ACTUAL), q);
+    const panelSug = document.getElementById("sugerencias");
+    if (panelSug) panelSug.hidden = true;
+
+    let resultados = buscar(q, 10, TEMA_ACTUAL);
+    let modo = "exacto";
+    if (!resultados.length && TEMA_ACTUAL !== "todos") {
+      resultados = buscar(q, 10, "todos");
+      if (resultados.length) modo = "sin-filtro";
+    }
+    if (!resultados.length) {
+      const qExp = expandirConsulta(q);
+      if (qExp) {
+        resultados = buscar(qExp, 10, "todos");
+        if (resultados.length) modo = "expandida";
+      }
+    }
+    render(resultados, q, { modo });
     document.getElementById("resultados").scrollIntoView({ behavior: "smooth", block: "start" });
   };
   RUN_QUERY = run;
+  initSugerencias(run);
   document.getElementById("btn").addEventListener("click", () =>
     run(document.getElementById("q").value));
   document.getElementById("q").addEventListener("keydown", e => {
