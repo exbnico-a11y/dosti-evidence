@@ -428,6 +428,25 @@ const ALIAS_PADECIMIENTOS = {
   artritis: ["artritis", "reuma", "artritis reumatoide", "articulaciones inflamadas"],
   osteoporosis: ["osteoporosis", "huesos fragiles", "densidad osea baja",
     "fractura por fragilidad"],
+  colon_irritable: ["colon irritable", "intestino irritable", "colitis nerviosa",
+    "sindrome de intestino irritable", "sii"],
+  candidiasis_oral: ["candidiasis oral", "candidiasis orofaringea", "albugo",
+    "hongos en la boca", "candida en la boca"],
+  micosis: ["tina", "onicomicosis", "hongos en las unas", "hongos en la piel",
+    "dermatofitosis", "pie de atleta"],
+  escabiosis: ["escabiosis", "sarna", "acariasis"],
+  psoriasis: ["psoriasis", "placas de psoriasis"],
+  dermatitis_atopica: ["dermatitis atopica", "eccema", "eczema", "piel atopica"],
+  dermatitis_contacto: ["dermatitis por contacto", "dermatitis de contacto",
+    "alergia en la piel por contacto", "dermatitis irritativa"],
+  hipertiroidismo: ["hipertiroidismo", "enfermedad de graves", "tiroides alta",
+    "tiroides acelerada", "bocio toxico"],
+  vulvovaginitis: ["candidosis vulvovaginal", "candidiasis vaginal",
+    "hongos vaginales", "infeccion vaginal por hongos", "vulvovaginitis"],
+  control_prenatal: ["control prenatal", "prenatal", "consultas del embarazo",
+    "vigilancia del embarazo", "embarazo normal"],
+  parto_bajo_riesgo: ["parto de bajo riesgo", "trabajo de parto",
+    "parto normal", "parto eutocico", "embarazo de bajo riesgo"],
 };
 
 const ALIAS_A_TEMA = {};
@@ -1581,7 +1600,13 @@ async function init() {
                        colecistitis: "Colecistitis y colelitiasis", pancreatitis: "Pancreatitis aguda",
                        dispepsia: "Dispepsia funcional", sinusitis: "Sinusitis aguda",
                        faringoamigdalitis: "Faringoamigdalitis", conjuntivitis: "Conjuntivitis",
-                       bronquiolitis: "Bronquiolitis" };
+                       bronquiolitis: "Bronquiolitis",
+                       colon_irritable: "Intestino irritable", candidiasis_oral: "Candidiasis orofaríngea",
+                       micosis: "Tiña y onicomicosis", escabiosis: "Escabiosis",
+                       psoriasis: "Psoriasis", dermatitis_atopica: "Dermatitis atópica",
+                       dermatitis_contacto: "Dermatitis por contacto", hipertiroidismo: "Enf. de Graves (hipertiroidismo)",
+                       vulvovaginitis: "Candidosis vulvovaginal", control_prenatal: "Control prenatal",
+                       parto_bajo_riesgo: "Parto de bajo riesgo" };
   document.getElementById("doclist").innerHTML = temas.map(t => {
     const docs = IDX.meta.docs.filter(d => d.tema === t);
     return `<li class="tema-grupo"><strong>${nombreTema[t] || t}</strong> (${docs.length} fuentes)<ul>` +
