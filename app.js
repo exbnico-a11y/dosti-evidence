@@ -447,6 +447,28 @@ const ALIAS_PADECIMIENTOS = {
     "vigilancia del embarazo", "embarazo normal"],
   parto_bajo_riesgo: ["parto de bajo riesgo", "trabajo de parto",
     "parto normal", "parto eutocico", "embarazo de bajo riesgo"],
+  rinitis: ["rinitis", "rinitis alergica", "alergia nasal", "fiebre del heno",
+    "rinitis vasomotora", "nariz congestionada cronica"],
+  exantemas: ["exantema", "varicela", "escarlatina", "sarampion", "rubeola",
+    "parotiditis", "paperas", "erupcion con fiebre"],
+  preeclampsia_eclampsia: ["preeclampsia", "eclampsia", "pre eclampsia",
+    "presion alta en el embarazo", "hipertension gestacional"],
+  otitis_externa: ["otitis externa", "oído de nadador", "oido de nadador",
+    "infeccion del oido externo", "dolor de oido con pus"],
+  cerumen: ["cerumen", "cerumen impactado", "tapon de cera", "oido tapado",
+    "tapon de cerumen"],
+  epistaxis: ["epistaxis", "sangrado de nariz", "sangrado nasal",
+    "hemorragia nasal", "sangra la nariz"],
+  vertigo: ["vertigo", "vertigo postural", "vppb", "mareo posicional",
+    "mareo al girar la cabeza", "vertigo paroxistico"],
+  paralisis_facial: ["paralisis facial", "paralisis de bell", "cara caida",
+    "cara paralizada", "bell"],
+  fibromialgia: ["fibromialgia", "dolor generalizado cronico",
+    "dolor muscular generalizado", "fibromialgico"],
+  osteoartrosis: ["osteoartrosis", "artrosis", "osteoartritis de rodilla",
+    "artrosis de rodilla", "desgaste de rodilla", "gonartrosis"],
+  sepsis_puerperal: ["sepsis materna", "sepsis puerperal", "sepsis postparto",
+    "infeccion puerperal", "endometritis puerperal", "fiebre puerperal"],
 };
 
 const ALIAS_A_TEMA = {};
@@ -1606,7 +1628,13 @@ async function init() {
                        psoriasis: "Psoriasis", dermatitis_atopica: "Dermatitis atópica",
                        dermatitis_contacto: "Dermatitis por contacto", hipertiroidismo: "Enf. de Graves (hipertiroidismo)",
                        vulvovaginitis: "Candidosis vulvovaginal", control_prenatal: "Control prenatal",
-                       parto_bajo_riesgo: "Parto de bajo riesgo" };
+                       parto_bajo_riesgo: "Parto de bajo riesgo",
+                       rinitis: "Rinitis alérgica y vasomotora", exantemas: "Exantemas infecciosos",
+                       preeclampsia_eclampsia: "Preeclampsia/Eclampsia", otitis_externa: "Otitis externa",
+                       cerumen: "Cerumen impactado", epistaxis: "Epistaxis",
+                       vertigo: "Vértigo postural (VPPB)", paralisis_facial: "Parálisis de Bell",
+                       fibromialgia: "Fibromialgia", osteoartrosis: "Osteoartrosis de rodilla",
+                       sepsis_puerperal: "Sepsis materna" };
   document.getElementById("doclist").innerHTML = temas.map(t => {
     const docs = IDX.meta.docs.filter(d => d.tema === t);
     return `<li class="tema-grupo"><strong>${nombreTema[t] || t}</strong> (${docs.length} fuentes)<ul>` +
