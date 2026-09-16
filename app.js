@@ -397,6 +397,25 @@ const NOMBRE_PADECIMIENTO = {
   cefalea: "Cefalea y migraña", anemia: "Anemia ferropénica",
   ivu: "Infección del tracto urinario", artritis: "Artritis reumatoide",
   osteoporosis: "Osteoporosis",
+  evc: "EVC isquémica", embarazo_hipertensivo: "Enf. hipertensivas del embarazo",
+  hemorragia_obstetrica: "Choque hemorrágico obstétrico",
+  parto_pretermino: "Parto pretérmino", apendicitis: "Apendicitis aguda",
+  colecistitis: "Colecistitis y colelitiasis", pancreatitis: "Pancreatitis aguda",
+  dispepsia: "Dispepsia funcional", sinusitis: "Sinusitis aguda",
+  faringoamigdalitis: "Faringoamigdalitis", conjuntivitis: "Conjuntivitis",
+  bronquiolitis: "Bronquiolitis", influenza: "Influenza estacional",
+  colon_irritable: "Intestino irritable", candidiasis_oral: "Candidiasis orofaríngea",
+  micosis: "Tiña y onicomicosis", escabiosis: "Escabiosis",
+  psoriasis: "Psoriasis", dermatitis_atopica: "Dermatitis atópica",
+  dermatitis_contacto: "Dermatitis por contacto", hipertiroidismo: "Enfermedad de Graves",
+  vulvovaginitis: "Candidosis vulvovaginal", control_prenatal: "Control prenatal",
+  parto_bajo_riesgo: "Parto de bajo riesgo",
+  rinitis: "Rinitis alérgica y vasomotora", exantemas: "Exantemas infecciosos",
+  preeclampsia_eclampsia: "Preeclampsia/Eclampsia", otitis_externa: "Otitis externa aguda",
+  cerumen: "Cerumen impactado", epistaxis: "Epistaxis",
+  vertigo: "Vértigo postural paroxístico benigno", paralisis_facial: "Parálisis de Bell",
+  fibromialgia: "Fibromialgia", osteoartrosis: "Osteoartrosis de rodilla",
+  sepsis_puerperal: "Sepsis materna",
 };
 
 /* alias normalizados (sin acentos, minúsculas); clínicos + coloquiales */
@@ -576,7 +595,7 @@ function render(resultados, query, opts = {}) {
 
   let html = `<h3>Respuesta basada en guías oficiales</h3>`;
   if (opts.padecimiento) {
-    html += `<div class="aviso-padecimiento">🏥 Padecimiento detectado: <strong>${NOMBRE_PADECIMIENTO[opts.padecimiento]}</strong>
+    html += `<div class="aviso-padecimiento">🏥 Padecimiento detectado: <strong>${NOMBRE_PADECIMIENTO[opts.padecimiento] || opts.padecimiento}</strong>
       — evidencia priorizada de sus guías oficiales.
       <button type="button" class="btn-algoritmo" data-alg="${opts.padecimiento}">📋 Ver algoritmo clínico</button>
       <button type="button" class="btn-ficha" data-tema="${opts.padecimiento}">🏥 Ver ficha completa</button></div>`;
