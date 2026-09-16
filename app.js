@@ -537,7 +537,8 @@ function render(resultados, query, opts = {}) {
   if (opts.padecimiento) {
     html += `<div class="aviso-padecimiento">🏥 Padecimiento detectado: <strong>${NOMBRE_PADECIMIENTO[opts.padecimiento]}</strong>
       — evidencia priorizada de sus guías oficiales.
-      <button type="button" class="btn-algoritmo" data-alg="${opts.padecimiento}">📋 Ver algoritmo clínico</button></div>`;
+      <button type="button" class="btn-algoritmo" data-alg="${opts.padecimiento}">📋 Ver algoritmo clínico</button>
+      <button type="button" class="btn-ficha" data-tema="${opts.padecimiento}">🏥 Ver ficha completa</button></div>`;
   }
   if (opts.modo && opts.modo !== "exacto") {
     const explicacion = {
@@ -598,6 +599,12 @@ function render(resultados, query, opts = {}) {
     if (tab) tab.click();
     const chip = document.querySelector(`.chip-alg[data-alg="${btnAlg.dataset.alg}"]`);
     if (chip) chip.click();
+  });
+  const btnFicha = box.querySelector(".btn-ficha");
+  if (btnFicha) btnFicha.addEventListener("click", () => {
+    const tab = document.querySelector('.tabs .tab[data-vista="padecimientos"]');
+    if (tab) tab.click();
+    pintarHubPadecimiento(btnFicha.dataset.tema);
   });
 
   // --- refinamiento IA (opcional, BYOK) ---
@@ -1290,7 +1297,7 @@ function initPadecimientos() {
     b.addEventListener("click", () => pintarHubPadecimiento(b.dataset.tema)));
 }
 
-function pintarHubPadecimiento(tema) {
+function pintarHubPadecimiento(tema, sinScroll) {
   const detalle = document.getElementById("padecimiento-detalle");
   const grid = document.getElementById("padecimientos-grid");
   const nombre = NOMBRE_PADECIMIENTO[tema];
@@ -1344,105 +1351,69 @@ function pintarHubPadecimiento(tema) {
     detalle.hidden = true; grid.hidden = false;
   });
   detalle.querySelector("#pad-ver-alg").addEventListener("click", () => navegarAlgoritmo(tema));
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  if (!sinScroll) window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-/* ---------- buscador de sección: cubre evidencias + algoritmos + remedios ---------- */
+/* ---------- búsqueda global: una sola consulta, aplica a todas las secciones ---------- */
 
-function buscarPasosAlgoritmo(q, limite = 4) {
+let BUSQUEDA_ACTUAL = "";
+
+function resaltarPasosAlgoritmo(q) {
   const terms = tokenize(q);
-  if (!terms.length) return [];
-  const matches = [];
-  document.querySelectorAll("#algoritmo .alg").forEach(alg => {
-    alg.querySelectorAll("li.paso").forEach(paso => {
-      if (matches.length >= limite) return;
-      const t = norm(paso.textContent.toLowerCase());
-      if (terms.some(term => t.includes(term))) {
-        matches.push({ tema: alg.dataset.alg, paso,
-          titulo: (paso.querySelector("h4") || {}).textContent || "Paso" });
-      }
-    });
+  document.querySelectorAll("#algoritmo li.paso").forEach(p => {
+    p.classList.remove("resaltado");
+    if (!terms.length) return;
+    const t = norm(p.textContent.toLowerCase());
+    if (terms.some(term => t.includes(term))) p.classList.add("resaltado");
   });
-  return matches;
 }
 
-function buscarRemediosData(q, limite = 4) {
+function filtrarGridPadecimientos(q) {
+  const detalle = document.getElementById("padecimiento-detalle");
+  const grid = document.getElementById("padecimientos-grid");
+  if (!detalle.hidden) { detalle.hidden = true; grid.hidden = false; }
   const terms = tokenize(q);
-  if (!terms.length) return [];
-  return REMEDIOS.filter(r => {
-    const palabras = norm([r.nombre, r.uso, r.preparacion, r.evidenciaNota].join(" ").toLowerCase())
-      .split(/[^a-z0-9ñ]+/);
-    return terms.some(t => palabras.some(w => w.startsWith(t)));
-  }).slice(0, limite);
-}
-
-function pintarBusquedaSeccion(q, contenedor) {
-  const ev = buscar(q, 4, "todos");
-  const algs = buscarPasosAlgoritmo(q);
-  const rems = buscarRemediosData(q);
-  if (!ev.length && !algs.length && !rems.length) {
-    contenedor.innerHTML = `<p class="nota">Sin coincidencias en evidencias, algoritmos ni remedios para “${escHtml(q)}”.</p>`;
-    contenedor.hidden = false;
-    return;
-  }
-  let html = "";
-  if (ev.length) {
-    html += `<div class="res-grupo"><strong>📚 Evidencia</strong>` + ev.map(([cid]) => {
-      const info = chunkInfo(cid);
-      const txt = limpiar(info.texto);
-      return `<button type="button" class="res-item" data-acc="ev" data-q="${escHtml(q)}">
-        <span class="res-texto">${escHtml(txt.slice(0, 130))}${txt.length > 130 ? "…" : ""}</span>
-        <span class="sug-fuente">${info.docCorto} · p.${info.pagina}</span></button>`;
-    }).join("") + `</div>`;
-  }
-  if (algs.length) {
-    html += `<div class="res-grupo"><strong>🗺️ Algoritmos clínicos</strong>` + algs.map(a =>
-      `<button type="button" class="res-item" data-acc="alg" data-tema="${a.tema}">
-        <span class="res-texto">${ICONOS_PADECIMIENTO[a.tema]} ${NOMBRE_PADECIMIENTO[a.tema]} — ${escHtml(a.titulo)}</span></button>`).join("") + `</div>`;
-  }
-  if (rems.length) {
-    html += `<div class="res-grupo"><strong>🌿 Remedios</strong>` + rems.map(r =>
-      `<button type="button" class="res-item" data-acc="rem" data-nombre="${escHtml(r.nombre)}">
-        <span class="res-texto">${r.icono} ${escHtml(r.nombre)}</span>
-        <span class="sug-fuente">${escHtml(r.uso.slice(0, 70))}${r.uso.length > 70 ? "…" : ""}</span></button>`).join("") + `</div>`;
-  }
-  contenedor.innerHTML = html;
-  contenedor.hidden = false;
-  contenedor.querySelectorAll('.res-item[data-acc="ev"]').forEach(b =>
-    b.addEventListener("click", () => {
-      const tab = document.querySelector('.tabs .tab[data-vista="buscador"]');
-      if (tab) tab.click();
-      document.getElementById("q").value = b.dataset.q;
-      RUN_QUERY(b.dataset.q);
-    }));
-  contenedor.querySelectorAll('.res-item[data-acc="alg"]').forEach(b =>
-    b.addEventListener("click", () => navegarAlgoritmo(b.dataset.tema)));
-  contenedor.querySelectorAll('.res-item[data-acc="rem"]').forEach(b =>
-    b.addEventListener("click", () => {
-      const tab = document.querySelector('.tabs .tab[data-vista="remedios"]');
-      if (tab) tab.click();
-      const input = document.getElementById("filtro-remedios-texto");
-      if (input) {
-        input.value = b.dataset.nombre;
-        input.dispatchEvent(new Event("input", { bubbles: true }));
-        setTimeout(() => input.scrollIntoView({ behavior: "smooth", block: "center" }), 300);
-      }
-    }));
-}
-
-function initBuscadoresSeccion() {
-  [["q-algoritmo", "res-algoritmo"], ["q-remedios-global", "res-remedios-global"]].forEach(([inpId, resId]) => {
-    const input = document.getElementById(inpId);
-    const cont = document.getElementById(resId);
-    if (!input || !cont) return;
-    input.addEventListener("keydown", e => {
-      if (e.key === "Enter") {
-        const q = input.value.trim();
-        if (q.length >= 3) pintarBusquedaSeccion(q, cont);
-      }
-    });
-    input.addEventListener("input", () => { if (input.value.trim().length < 3) cont.hidden = true; });
+  document.querySelectorAll(".pad-card").forEach(c => {
+    const t = norm(c.textContent.toLowerCase());
+    c.style.display = (!terms.length || terms.some(term => t.includes(term))) ? "" : "none";
   });
+}
+
+/* aplica la consulta activa a las 4 secciones de la app */
+function aplicarBusquedaSecciones(q) {
+  const padecimiento = detectarPadecimiento(q);
+
+  // algoritmos: selecciona el del padecimiento detectado y resalta los pasos con los términos
+  if (padecimiento) {
+    document.querySelectorAll(".chip-alg").forEach(c =>
+      c.classList.toggle("activo", c.dataset.alg === padecimiento));
+    document.querySelectorAll("#algoritmo .alg").forEach(a => {
+      a.hidden = a.dataset.alg !== padecimiento;
+    });
+  }
+  resaltarPasosAlgoritmo(q);
+
+  // padecimientos: abre la ficha del padecimiento o filtra la rejilla
+  if (padecimiento) pintarHubPadecimiento(padecimiento, true);
+  else filtrarGridPadecimientos(q);
+
+  // remedios: filtra el catálogo con la misma consulta (alias del padecimiento si se detectó)
+  const inputR = document.getElementById("filtro-remedios-texto");
+  if (inputR) {
+    inputR.value = padecimiento ? ALIAS_PADECIMIENTOS[padecimiento][0] : q;
+    inputR.dispatchEvent(new Event("input", { bubbles: true }));
+  }
+}
+
+function limpiarBusquedaGlobal() {
+  BUSQUEDA_ACTUAL = "";
+  document.getElementById("q").value = "";
+  document.getElementById("btn-limpiar-q").hidden = true;
+  resaltarPasosAlgoritmo("");
+  filtrarGridPadecimientos("");
+  const inputR = document.getElementById("filtro-remedios-texto");
+  if (inputR) { inputR.value = ""; inputR.dispatchEvent(new Event("input", { bubbles: true })); }
+  document.getElementById("btn-home").click();
 }
 
 /* ---------- sugerencias de búsqueda y respaldo sin resultados ---------- */
@@ -1625,8 +1596,8 @@ async function init() {
   initRemedios();
   initAlgoritmos();
   initPadecimientos();
-  initBuscadoresSeccion();
   initTabs();
+  document.getElementById("btn-limpiar-q").addEventListener("click", limpiarBusquedaGlobal);
 
   const run = q => {
     q = q.trim();
@@ -1656,6 +1627,10 @@ async function init() {
       }
     }
     render(resultados, q, { modo, padecimiento });
+    // búsqueda global: la misma consulta aplica a todas las secciones
+    BUSQUEDA_ACTUAL = q;
+    document.getElementById("btn-limpiar-q").hidden = false;
+    aplicarBusquedaSecciones(q);
     document.getElementById("resultados").scrollIntoView({ behavior: "smooth", block: "start" });
   };
   RUN_QUERY = run;

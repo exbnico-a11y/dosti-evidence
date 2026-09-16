@@ -229,6 +229,32 @@ footer {
 .btn-algoritmo:hover { filter: brightness(1.1); }
 .chip-padecimiento { border-color: var(--teal); color: var(--teal-dark); font-weight: 600; }
 
+/* --- búsqueda global persistente --- */
+.barra-busqueda-global {
+  position: sticky; top: 0; z-index: 50;
+  display: flex; align-items: flex-start; justify-content: center; gap: 8px;
+  padding: 10px 24px; background: var(--bg);
+  border-bottom: 1px solid var(--border);
+}
+.barra-busqueda-global .buscador-wrap { flex: 1; max-width: 720px; }
+.btn-limpiar-q {
+  margin-top: 4px; width: 34px; height: 34px; border-radius: 50%;
+  border: 1px solid var(--border); background: var(--card); cursor: pointer;
+  font-size: 15px; color: var(--muted);
+}
+.btn-limpiar-q:hover { border-color: #c0392b; color: #c0392b; }
+.btn-limpiar-q[hidden] { display: none; }
+.btn-ficha {
+  padding: 5px 12px; font-size: 12.5px; font-weight: 600; cursor: pointer;
+  background: var(--card); color: var(--teal-dark); border: 1px solid var(--teal);
+  border-radius: 14px;
+}
+.btn-ficha:hover { background: rgba(20,120,110,.10); }
+li.paso.resaltado {
+  outline: 2px solid #e6a817; outline-offset: 2px;
+  background: #fff8e1; border-radius: 8px;
+}
+
 /* --- hub de padecimientos --- */
 .padecimientos-grid {
   display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));

@@ -32,17 +32,21 @@
     <button class="tab" data-vista="remedios">🌿 Remedios caseros con evidencia</button>
   </nav>
 
+  <div class="barra-busqueda-global">
+    <div class="buscador-wrap">
+      <div class="searchbox">
+        <input id="q" type="text" autocomplete="off"
+          placeholder="Ej.: obesidad mórbida, presión alta, metformina dosis, dolor de cabeza…">
+        <button id="btn">Buscar evidencia</button>
+      </div>
+      <div id="sugerencias" class="sugerencias" hidden></div>
+    </div>
+    <button id="btn-limpiar-q" class="btn-limpiar-q" hidden title="Limpiar búsqueda">✕</button>
+  </div>
+
   <main>
     <section class="hero" id="hero">
       <h2>¿Qué necesitas resolver hoy en consulta?</h2>
-      <div class="buscador-wrap">
-        <div class="searchbox">
-          <input id="q" type="text" autocomplete="off"
-            placeholder="Ej.: obesidad mórbida, presión alta, metformina dosis, dolor de cabeza…">
-          <button id="btn">Buscar evidencia</button>
-        </div>
-        <div id="sugerencias" class="sugerencias" hidden></div>
-      </div>
       <div class="ejemplos">
         <span>Padecimiento:</span>
         <button class="chip-tema activo" data-tema="todos">Todos</button>
@@ -113,12 +117,6 @@
         <p>Secuencias decisión → acción construidas a partir de las GPC indexadas
         (CENETEC/IMSS) y sus diagramas de flujo. Elige el padecimiento; cada paso
         cita la guía fuente. Son síntesis de consulta: la fuente completa manda.</p>
-      </div>
-
-      <div class="buscador-seccion card">
-        <input id="q-algoritmo" type="text" autocomplete="off"
-          placeholder="🔎 Busca en algoritmos, evidencias y remedios… (ej. metformina, referir, jamaica)">
-        <div id="res-algoritmo" class="res-seccion" hidden></div>
       </div>
 
       <div class="alg-selector" role="tablist" aria-label="Selector de padecimiento">
@@ -843,12 +841,6 @@
           <span class="badge-ev mixta">Evidencia mixta</span>
           <span class="badge-ev tradicional">Uso tradicional documentado</span>
         </div>
-      </div>
-
-      <div class="buscador-seccion card">
-        <input id="q-remedios-global" type="text" autocomplete="off"
-          placeholder="🔎 Busca en remedios, evidencias y algoritmos… (ej. presión, tos, metformina)">
-        <div id="res-remedios-global" class="res-seccion" hidden></div>
       </div>
 
       <div class="buscador-remedios">
