@@ -28,6 +28,7 @@
   <nav class="tabs">
     <button class="tab activo" data-vista="buscador">🔎 Buscador de evidencia</button>
     <button class="tab" data-vista="algoritmo">🗺️ Algoritmos clínicos</button>
+    <button class="tab" data-vista="padecimientos">🏥 Padecimientos</button>
     <button class="tab" data-vista="remedios">🌿 Remedios caseros con evidencia</button>
   </nav>
 
@@ -95,12 +96,29 @@
       </aside>
     </section>
 
+    <section id="padecimientos" hidden>
+      <div class="card intro">
+        <h3>🏥 Padecimientos</h3>
+        <p>Hub de cada padecimiento del catálogo: qué es, la evidencia que lo respalda,
+        las soluciones con tratamiento, su algoritmo clínico de primer nivel y los
+        remedios caseros con evidencia relacionados.</p>
+      </div>
+      <div id="padecimientos-grid" class="padecimientos-grid"></div>
+      <div id="padecimiento-detalle" class="padecimiento-detalle" hidden></div>
+    </section>
+
     <section id="algoritmo" hidden>
       <div class="card intro">
         <h3>🗺️ Algoritmos clínicos — primer nivel</h3>
         <p>Secuencias decisión → acción construidas a partir de las GPC indexadas
         (CENETEC/IMSS) y sus diagramas de flujo. Elige el padecimiento; cada paso
         cita la guía fuente. Son síntesis de consulta: la fuente completa manda.</p>
+      </div>
+
+      <div class="buscador-seccion card">
+        <input id="q-algoritmo" type="text" autocomplete="off"
+          placeholder="🔎 Busca en algoritmos, evidencias y remedios… (ej. metformina, referir, jamaica)">
+        <div id="res-algoritmo" class="res-seccion" hidden></div>
       </div>
 
       <div class="alg-selector" role="tablist" aria-label="Selector de padecimiento">
@@ -825,6 +843,12 @@
           <span class="badge-ev mixta">Evidencia mixta</span>
           <span class="badge-ev tradicional">Uso tradicional documentado</span>
         </div>
+      </div>
+
+      <div class="buscador-seccion card">
+        <input id="q-remedios-global" type="text" autocomplete="off"
+          placeholder="🔎 Busca en remedios, evidencias y algoritmos… (ej. presión, tos, metformina)">
+        <div id="res-remedios-global" class="res-seccion" hidden></div>
       </div>
 
       <div class="buscador-remedios">

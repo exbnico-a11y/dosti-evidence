@@ -1209,6 +1209,7 @@ function initTabs() {
     document.getElementById("hero").hidden = false;
     document.getElementById("remedios").hidden = true;
     document.getElementById("algoritmo").hidden = true;
+    document.getElementById("padecimientos").hidden = true;
     const sug = document.getElementById("sugerencias");
     if (sug) sug.hidden = true;
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1229,6 +1230,7 @@ function initTabs() {
       document.getElementById("hero").hidden = vista !== "buscador";
       document.getElementById("remedios").hidden = vista !== "remedios";
       document.getElementById("algoritmo").hidden = vista !== "algoritmo";
+      document.getElementById("padecimientos").hidden = vista !== "padecimientos";
       document.getElementById("resultados").hidden = vista !== "buscador" || !hayResultados;
       document.getElementById("inicio").hidden = vista !== "buscador" || hayResultados;
       window.scrollTo({ top: 0, behavior: "smooth" });
@@ -1236,6 +1238,212 @@ function initTabs() {
 }
 
 /* ---------- arranque ---------- */
+
+/* ---------- hub de padecimientos + buscador de sección ---------- */
+
+const ICONOS_PADECIMIENTO = {
+  hipertension: "🫀", diabetes: "🍬", dislipidemias: "🧈", obesidad: "⚖️",
+  asma: "🫁", epoc: "🚬", neumonia: "🌡️", erc: "🫘", depresion: "🧠",
+  ansiedad: "💭", hipotiroidismo: "🦋", cefalea: "⚡", anemia: "🩸",
+  ivu: "🧫", artritis: "🤲", osteoporosis: "🦴",
+};
+
+const DESCRIPCION_PADECIMIENTO = {
+  hipertension: "Elevación persistente de la presión arterial ≥ 140/90 mm Hg; estratificar riesgo cardiovascular guía el tratamiento.",
+  diabetes: "Hiperglucemia crónica confirmada con HbA1c; metformina es el inicio y las metas se individualizan.",
+  dislipidemias: "Colesterol y triglicéridos alterados; la meta de LDL depende del riesgo cardiovascular (≤116 a <55 mg/dL).",
+  obesidad: "IMC > 30 kg/m² (o > 27 con comorbilidad); meta de pérdida > 5 % del peso con mejora clínica.",
+  asma: "Enfermedad inflamatoria crónica de vías respiratorias; en exacerbación, β2 de acción rápida y oxígeno.",
+  epoc: "Obstrucción bronquial crónica, casi siempre por tabaquismo; confirma con espirometría con broncodilatador.",
+  neumonia: "Infección aguda del parénquima pulmonar con infiltrado nuevo en radiografía; estratifica con PSI/CURB-65.",
+  erc: "TFG < 60 mL/min/1.73 m² o daño renal ≥ 3 meses; IECA/ARA II si proteinuria.",
+  depresion: "Trastorno del ánimo con afectación funcional; preguntar siempre por ideas de muerte o suicidio.",
+  ansiedad: "TAG, pánico y fobias; TCC y antidepresivos de base, BZD solo corto plazo.",
+  hipotiroidismo: "TSH elevada; levotiroxina 1.6–1.8 mcg/kg/día, dosis bajas si mayor de 65 años o cardiopatía.",
+  cefalea: "Tensional (bilateral, opresiva) o migraña; banderas rojas mandan a referencia inmediata.",
+  anemia: "Hb baja, con déficit de hierro como causa principal en adultos; sulfato ferroso de primera línea.",
+  ivu: "Infección urinaria baja en la mujer no embarazada; TMP/SMZ o nitrofurantoína según GPC.",
+  artritis: "Artritis simétrica autoinmune; iniciar FARME (metotrexato) lo antes posible.",
+  osteoporosis: "Masa ósea baja con riesgo de fractura; alendronato + calcio y vitamina D.",
+};
+
+function navegarAlgoritmo(tema) {
+  const tab = document.querySelector('.tabs .tab[data-vista="algoritmo"]');
+  if (tab) tab.click();
+  const chip = document.querySelector(`.chip-alg[data-alg="${tema}"]`);
+  if (chip) chip.click();
+}
+
+function initPadecimientos() {
+  const grid = document.getElementById("padecimientos-grid");
+  if (!grid) return;
+  grid.innerHTML = Object.keys(NOMBRE_PADECIMIENTO).map(t => {
+    const nFuentes = IDX.meta.docs.filter(d => d.tema === t).length;
+    return `<button type="button" class="pad-card" data-tema="${t}">
+      <span class="pad-icono">${ICONOS_PADECIMIENTO[t]}</span>
+      <span class="pad-nombre">${NOMBRE_PADECIMIENTO[t]}</span>
+      <span class="pad-desc">${DESCRIPCION_PADECIMIENTO[t]}</span>
+      <span class="pad-fuentes">${nFuentes} fuentes oficiales</span>
+    </button>`;
+  }).join("");
+  grid.querySelectorAll(".pad-card").forEach(b =>
+    b.addEventListener("click", () => pintarHubPadecimiento(b.dataset.tema)));
+}
+
+function pintarHubPadecimiento(tema) {
+  const detalle = document.getElementById("padecimiento-detalle");
+  const grid = document.getElementById("padecimientos-grid");
+  const nombre = NOMBRE_PADECIMIENTO[tema];
+
+  const ev = buscar(nombre, 5, tema);
+  const sol = sintetizar(buscar(`tratamiento ${nombre}`, 8, tema), `tratamiento ${nombre}`);
+  const docs = IDX.meta.docs.filter(d => d.tema === tema);
+  const claves = (ALIAS_PADECIMIENTOS[tema] || []).filter(a => a.length >= 4);
+  const remedios = REMEDIOS.filter(r => {
+    const texto = norm([r.nombre, r.uso, r.preparacion, r.evidenciaNota].join(" ").toLowerCase());
+    return claves.some(k => texto.includes(norm(k.toLowerCase())));
+  });
+
+  let html = `<button type="button" class="chip" id="pad-volver">← Todos los padecimientos</button>
+    <div class="card pad-header">
+      <span class="pad-icono grande">${ICONOS_PADECIMIENTO[tema]}</span>
+      <div><h3>${nombre}</h3><p>${DESCRIPCION_PADECIMIENTO[tema]}</p></div>
+    </div>
+    <div class="pad-bloques">
+    <div class="card pad-bloque"><h4>💊 Soluciones — tratamiento basado en guías</h4>`;
+  html += sol.length
+    ? `<ul>${sol.slice(0, 5).map(o => `<li>${o.s} <span class="cite">[${o.ref + 1}]</span></li>`).join("")}</ul>`
+    : `<p class="nota">Ver el algoritmo clínico y las fuentes oficiales de abajo.</p>`;
+  html += `</div>
+    <div class="card pad-bloque"><h4>🗺️ Algoritmo clínico de primer nivel</h4>
+    <p class="nota">Secuencia decisión → acción con criterios de referencia a segundo nivel.</p>
+    <button type="button" class="btn-algoritmo" id="pad-ver-alg">📋 Ver algoritmo de ${nombre}</button></div>
+    <div class="card pad-bloque"><h4>🌿 Remedios con evidencia relacionados</h4>`;
+  html += remedios.length
+    ? `<ul class="pad-lista">${remedios.map(r => `<li><strong>${r.icono} ${r.nombre}</strong> — ${r.uso}</li>`).join("")}</ul>`
+    : `<p class="nota">Sin remedios con evidencia indexados para este padecimiento.</p>`;
+  html += `</div>
+    <div class="card pad-bloque"><h4>📚 Evidencias que respaldan el padecimiento</h4>`;
+  html += ev.length
+    ? `<ul class="pad-lista">${ev.map(([cid]) => {
+        const info = chunkInfo(cid);
+        const txt = limpiar(info.texto);
+        const recorte = txt.length > 220 ? txt.slice(0, 220).replace(/\s\S*$/, "") + "…" : txt;
+        return `<li>${recorte} <span class="sug-fuente">${info.docCorto} · p.${info.pagina}</span></li>`;
+      }).join("")}</ul>`
+    : `<p class="nota">Sin fragmentos indexados.</p>`;
+  html += `</div>
+    <div class="card pad-bloque"><h4>📖 Fuentes oficiales (${docs.length})</h4>
+    <ul class="pad-lista">${docs.map(d => `<li><strong>${d.nombre}</strong><br><span class="vig">${d.vigencia}</span></li>`).join("")}</ul></div>
+    </div>`;
+
+  detalle.innerHTML = html;
+  grid.hidden = true;
+  detalle.hidden = false;
+  detalle.querySelector("#pad-volver").addEventListener("click", () => {
+    detalle.hidden = true; grid.hidden = false;
+  });
+  detalle.querySelector("#pad-ver-alg").addEventListener("click", () => navegarAlgoritmo(tema));
+  window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+/* ---------- buscador de sección: cubre evidencias + algoritmos + remedios ---------- */
+
+function buscarPasosAlgoritmo(q, limite = 4) {
+  const terms = tokenize(q);
+  if (!terms.length) return [];
+  const matches = [];
+  document.querySelectorAll("#algoritmo .alg").forEach(alg => {
+    alg.querySelectorAll("li.paso").forEach(paso => {
+      if (matches.length >= limite) return;
+      const t = norm(paso.textContent.toLowerCase());
+      if (terms.some(term => t.includes(term))) {
+        matches.push({ tema: alg.dataset.alg, paso,
+          titulo: (paso.querySelector("h4") || {}).textContent || "Paso" });
+      }
+    });
+  });
+  return matches;
+}
+
+function buscarRemediosData(q, limite = 4) {
+  const terms = tokenize(q);
+  if (!terms.length) return [];
+  return REMEDIOS.filter(r => {
+    const palabras = norm([r.nombre, r.uso, r.preparacion, r.evidenciaNota].join(" ").toLowerCase())
+      .split(/[^a-z0-9ñ]+/);
+    return terms.some(t => palabras.some(w => w.startsWith(t)));
+  }).slice(0, limite);
+}
+
+function pintarBusquedaSeccion(q, contenedor) {
+  const ev = buscar(q, 4, "todos");
+  const algs = buscarPasosAlgoritmo(q);
+  const rems = buscarRemediosData(q);
+  if (!ev.length && !algs.length && !rems.length) {
+    contenedor.innerHTML = `<p class="nota">Sin coincidencias en evidencias, algoritmos ni remedios para “${escHtml(q)}”.</p>`;
+    contenedor.hidden = false;
+    return;
+  }
+  let html = "";
+  if (ev.length) {
+    html += `<div class="res-grupo"><strong>📚 Evidencia</strong>` + ev.map(([cid]) => {
+      const info = chunkInfo(cid);
+      const txt = limpiar(info.texto);
+      return `<button type="button" class="res-item" data-acc="ev" data-q="${escHtml(q)}">
+        <span class="res-texto">${escHtml(txt.slice(0, 130))}${txt.length > 130 ? "…" : ""}</span>
+        <span class="sug-fuente">${info.docCorto} · p.${info.pagina}</span></button>`;
+    }).join("") + `</div>`;
+  }
+  if (algs.length) {
+    html += `<div class="res-grupo"><strong>🗺️ Algoritmos clínicos</strong>` + algs.map(a =>
+      `<button type="button" class="res-item" data-acc="alg" data-tema="${a.tema}">
+        <span class="res-texto">${ICONOS_PADECIMIENTO[a.tema]} ${NOMBRE_PADECIMIENTO[a.tema]} — ${escHtml(a.titulo)}</span></button>`).join("") + `</div>`;
+  }
+  if (rems.length) {
+    html += `<div class="res-grupo"><strong>🌿 Remedios</strong>` + rems.map(r =>
+      `<button type="button" class="res-item" data-acc="rem" data-nombre="${escHtml(r.nombre)}">
+        <span class="res-texto">${r.icono} ${escHtml(r.nombre)}</span>
+        <span class="sug-fuente">${escHtml(r.uso.slice(0, 70))}${r.uso.length > 70 ? "…" : ""}</span></button>`).join("") + `</div>`;
+  }
+  contenedor.innerHTML = html;
+  contenedor.hidden = false;
+  contenedor.querySelectorAll('.res-item[data-acc="ev"]').forEach(b =>
+    b.addEventListener("click", () => {
+      const tab = document.querySelector('.tabs .tab[data-vista="buscador"]');
+      if (tab) tab.click();
+      document.getElementById("q").value = b.dataset.q;
+      RUN_QUERY(b.dataset.q);
+    }));
+  contenedor.querySelectorAll('.res-item[data-acc="alg"]').forEach(b =>
+    b.addEventListener("click", () => navegarAlgoritmo(b.dataset.tema)));
+  contenedor.querySelectorAll('.res-item[data-acc="rem"]').forEach(b =>
+    b.addEventListener("click", () => {
+      const tab = document.querySelector('.tabs .tab[data-vista="remedios"]');
+      if (tab) tab.click();
+      const input = document.getElementById("filtro-remedios-texto");
+      if (input) {
+        input.value = b.dataset.nombre;
+        input.dispatchEvent(new Event("input", { bubbles: true }));
+        setTimeout(() => input.scrollIntoView({ behavior: "smooth", block: "center" }), 300);
+      }
+    }));
+}
+
+function initBuscadoresSeccion() {
+  [["q-algoritmo", "res-algoritmo"], ["q-remedios-global", "res-remedios-global"]].forEach(([inpId, resId]) => {
+    const input = document.getElementById(inpId);
+    const cont = document.getElementById(resId);
+    if (!input || !cont) return;
+    input.addEventListener("keydown", e => {
+      if (e.key === "Enter") {
+        const q = input.value.trim();
+        if (q.length >= 3) pintarBusquedaSeccion(q, cont);
+      }
+    });
+    input.addEventListener("input", () => { if (input.value.trim().length < 3) cont.hidden = true; });
+  });
+}
 
 /* ---------- sugerencias de búsqueda y respaldo sin resultados ---------- */
 
@@ -1416,6 +1624,8 @@ async function init() {
   initFarmacos();
   initRemedios();
   initAlgoritmos();
+  initPadecimientos();
+  initBuscadoresSeccion();
   initTabs();
 
   const run = q => {
